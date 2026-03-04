@@ -1,0 +1,13 @@
+[project]
+name = "n4-ide"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "n4",
+    "pyqt6>=6.10.2",
+]
+
+[tool.uv.sources]
+n4 = { git = "https://github.com/kanogame/n4" }
