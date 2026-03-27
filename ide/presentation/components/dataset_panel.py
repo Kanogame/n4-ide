@@ -9,7 +9,7 @@ from PyQt6.QtCore import Qt
 
 
 class DatasetPanel(QWidget):
-    """Панель управления генерацией датасетов."""
+    """Панель для управления параметрами синтетических датасетов."""
 
     def __init__(self) -> None:
         super().__init__()

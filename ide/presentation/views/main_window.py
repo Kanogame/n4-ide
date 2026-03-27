@@ -1,12 +1,20 @@
 from PyQt6.QtCore import Qt
-from typing import Self
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QSplitter,
+    QTabWidget,
+    QWidget,
+    QToolBar,
+    QVBoxLayout,
+)
 
-from .widgets.editor_widget import EditorWidget
-from .widgets.graph_view import GraphView
-from .widgets.console_widget import ConsoleWidget
-from .widgets.dataset_panel import DatasetPanel
-from .widgets.weights_table import WeightsTable
-from PyQt6.QtWidgets import QMainWindow, QSplitter, QTabWidget, QWidget, QToolBar, QVBoxLayout
+from ide.presentation.components.editor_widget import EditorWidget
+from ide.presentation.components.graph_view import GraphView
+from ide.presentation.components.console_widget import ConsoleWidget
+from ide.presentation.components.dataset_panel import DatasetPanel
+from ide.presentation.components.weights_table import WeightsTable
+from ide.presentation.components.debug_panel import DebugPanel
+
 
 class MainWindow(QMainWindow):
     """Главное окно IDE"""
@@ -20,23 +28,22 @@ class MainWindow(QMainWindow):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        """Создание интерфейса"""
+        """Построить интерфейс приложения."""
 
-        # Toolbar
+        # Панель инструментов
         toolbar = QToolBar("Main Toolbar")
         self.addToolBar(toolbar)
 
-        # Центральный виджет
+        # Центральный виджет с основным макетом
         central_widget = QWidget()
         central_layout = QVBoxLayout()
         central_widget.setLayout(central_layout)
-
         self.setCentralWidget(central_widget)
 
-        # Главный вертикальный splitter
+        # Основной вертикальный разделитель
         main_splitter = QSplitter(Qt.Orientation.Vertical)
 
-        # Верхний splitter (editor + graph)
+        # Верхний горизонтальный разделитель (редактор + граф)
         top_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         self.editor = EditorWidget()
@@ -48,16 +55,18 @@ class MainWindow(QMainWindow):
         top_splitter.setStretchFactor(0, 3)
         top_splitter.setStretchFactor(1, 4)
 
-        # Нижние вкладки
+        # Нижние вкладки с консолью, параметрами и датасетом
         bottom_tabs = QTabWidget()
 
         self.console = ConsoleWidget()
-        self.dataset = DatasetPanel()
         self.weights = WeightsTable()
+        self.dataset = DatasetPanel()
+        self.debug_panel = DebugPanel()
 
         bottom_tabs.addTab(self.console, "Console")
         bottom_tabs.addTab(self.weights, "Weights")
         bottom_tabs.addTab(self.dataset, "Dataset")
+        bottom_tabs.addTab(self.debug_panel, "Debug")
 
         main_splitter.addWidget(top_splitter)
         main_splitter.addWidget(bottom_tabs)

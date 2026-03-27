@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit
 
 
 class ConsoleWidget(QWidget):
-    """Консоль вывода программы."""
+    """Консоль для отображения вывода программы и ошибок."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -17,3 +17,7 @@ class ConsoleWidget(QWidget):
     def append_text(self, text: str) -> None:
         """Добавить текст в консоль."""
         self.output.append(text)
+
+    def clear(self) -> None:
+        """Очистить содержимое консоли."""
+        self.output.clear()

@@ -15,6 +15,63 @@
 
 ---
 
+## Mandatory Folder Layout
+
+The project MUST follow this directory structure to maintain strict separation of concerns:
+
+```
+ide/
+├── __init__.py                          # Entry point with IDE class
+├── presentation/                        # Presentation Layer (PyQt6 UI)
+│   ├── __init__.py
+│   ├── components/                      # Reusable UI components
+│   │   ├── __init__.py
+│   │   ├── console_widget.py           # Console output display
+│   │   ├── graph_view.py               # Computation graph visualization
+│   │   ├── weights_table.py            # Model parameters table
+│   │   ├── dataset_panel.py            # Dataset management
+│   │   ├── debug_panel.py              # Debug controls
+│   │   └── editor_widget.py            # Python code editor
+│   └── views/                           # Full views (windows/dialogs)
+│       ├── __init__.py
+│       └── main_window.py              # Main application window
+├── application/                         # Application Layer (State & Orchestration)
+│   ├── __init__.py
+│   └── app.py                          # Central Application state machine
+└── domain/                              # Domain Layer (Business Logic)
+    ├── __init__.py
+    └── execution/                       # Code execution logic
+        ├── __init__.py
+        ├── executor.py                 # Safe code execution (SafeExecutor)
+        ├── redirect.py                 # Output redirection (stdout/stderr)
+        └── controller.py               # Execution orchestration
+```
+
+### Key Principles for Folder Structure
+
+1. **Presentation Layer** (`ide/presentation/`)
+   - Contains ONLY PyQt6 widgets and UI components
+   - NO business logic or domain imports (except via signals)
+   - Components are reusable and self-contained
+   - All communication via `pyqtSignal` emissions
+
+2. **Application Layer** (`ide/application/`)
+   - Contains `Application` class: central state machine
+   - Manages state: models, execution results, user settings
+   - Emits signals when state changes
+   - Coordinates between Presentation and Domain layers
+   - Contains immutable data structures (dataclasses) for signal passing
+
+3. **Domain Layer** (`ide/domain/`)
+   - Contains business logic completely independent of PyQt6
+   - `execution/` subdirectory handles code execution and safety
+   - No UI dependencies whatsoever
+   - Can be tested without PyQt6
+
+**IMPORTANT**: Never deviate from this structure. All new features MUST fit into one of these three layers.
+
+---
+
 ## Architecture Principles
 
 ### Layered Design
