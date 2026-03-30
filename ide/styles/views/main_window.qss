@@ -1,0 +1,26 @@
+QMainWindow {
+    background-color: #F3F3F3;
+}
+
+QTabWidget::pane {
+    border: none;
+}
+
+QTabBar::tab {
+    background-color: #F3F3F3;
+    border: none;
+    padding: 8px 16px;
+    color: rgba(0, 0, 0, 0.61);
+    font-family: "Open Sans";
+    font-size: 14px;
+}
+
+QTabBar::tab:selected {
+    background-color: white;
+    color: rgba(0, 0, 0, 0.90);
+    border-bottom: 3px solid #005FB8;
+}
+
+QTabBar::tab:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}

@@ -1,0 +1,7 @@
+NavBar {
+    background-color: #F3F3F3;
+}
+
+NavBarSeparator {
+    background-color: rgba(0, 0, 0, 0.06);
+}

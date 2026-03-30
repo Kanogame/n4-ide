@@ -7,7 +7,6 @@ Integrates styled components and navbar following N4-IDE architecture.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QMainWindow,
     QSplitter,
     QTabWidget,
     QWidget,
@@ -22,10 +21,11 @@ from ide.presentation.components.dataset_panel import DatasetPanel
 from ide.presentation.components.weights_table import WeightsTable
 from ide.presentation.components.debug_panel import DebugPanel
 from ide.presentation.components.model_view import ModelView
-from ide.presentation.components.navbar import NavBar, NavItem, NavItemType
+from ide.presentation.components.navbar import NavBar
+from ide.presentation.common.styled_widget import StyledMainWindow
 
 
-class MainWindow(QMainWindow):
+class MainWindow(StyledMainWindow):
     """Main N4-IDE window with collapsible navbar and tab-based panels.
 
     Architecture:
@@ -37,13 +37,14 @@ class MainWindow(QMainWindow):
     """
 
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__(
+            None,
+        )
 
         self.setWindowTitle("N4 IDE")
         self.resize(1600, 900)
 
         self._build_ui()
-        self._setup_styles()
 
     def _build_ui(self) -> None:
         """Build main application interface."""
@@ -118,69 +119,6 @@ class MainWindow(QMainWindow):
         """
 
         # Main navigation items
-        self.navbar.add_item(
-            NavItem(
-                id="editor",
-                icon_path="assets/icons/code.svg",
-                label="Editor",
-                tooltip="Code Editor",
-            )
-        )
-
-        self.navbar.add_item(
-            NavItem(
-                id="graph",
-                icon_path="assets/icons/graph.svg",
-                label="Graph",
-                tooltip="Computation Graph",
-            )
-        )
-
-        self.navbar.add_item(
-            NavItem(
-                id="training",
-                icon_path="assets/icons/training.svg",
-                label="Training",
-                tooltip="Model Training",
-            )
-        )
-
-        self.navbar.add_item(
-            NavItem(
-                id="model",
-                icon_path="assets/icons/model.svg",
-                label="Model",
-                tooltip="Model Inspector",
-            )
-        )
-
-        self.navbar.add_item(
-            NavItem(
-                id="dataset",
-                icon_path="assets/icons/dataset.svg",
-                label="Dataset",
-                tooltip="Dataset Management",
-            )
-        )
-
-        # Separator
-        self.navbar.add_item(
-            NavItem(
-                id="sep1",
-                icon_path="",
-                type=NavItemType.SEPARATOR,
-            )
-        )
-
-        # Bottom section items
-        self.navbar.add_bottom_item(
-            NavItem(
-                id="settings",
-                icon_path="assets/icons/code.svg",
-                label="Settings",
-                tooltip="Settings",
-            )
-        )
 
         # Connect navbar signals
         self.navbar.item_clicked.connect(self._on_navbar_item_clicked)
@@ -204,30 +142,3 @@ class MainWindow(QMainWindow):
 
         if item_id in tab_mapping and tab_mapping[item_id] >= 0:
             self.bottom_tabs.setCurrentIndex(tab_mapping[item_id])
-
-    def _setup_styles(self) -> None:
-        """Apply global styling to main window."""
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #F3F3F3;
-            }
-            QTabWidget::pane {
-                border: none;
-            }
-            QTabBar::tab {
-                background-color: #F3F3F3;
-                border: none;
-                padding: 8px 16px;
-                color: rgba(0, 0, 0, 0.61);
-                font-family: "Open Sans";
-                font-size: 14px;
-            }
-            QTabBar::tab:selected {
-                background-color: white;
-                color: rgba(0, 0, 0, 0.90);
-                border-bottom: 3px solid #005FB8;
-            }
-            QTabBar::tab:hover {
-                background-color: rgba(0, 0, 0, 0.04);
-            }
-        """)

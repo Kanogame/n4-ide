@@ -1,29 +1,24 @@
-"""
-Icon-based navbar for N4-IDE matching model.html design.
-
-Provides vertical navigation with icons only (no text labels).
-Icons must exist at configured paths in assets/icons/.
-"""
-
 from enum import Enum, auto
 from typing import Optional
 from dataclasses import dataclass
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton
 from PyQt6.QtCore import pyqtSignal, QSize
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QPainter, QColor
+
+from ide.presentation.common.styled_widget import StyledComponent
 
 
 class NavItemType(Enum):
     """Navigation item type for grouping."""
 
-    TOOL = auto()  # Regular tool button
-    SEPARATOR = auto()  # Visual separator
-    SPACER = auto()  # Flexible space
+    TOOL = auto()
+    SEPARATOR = auto()
+    SPACER = auto()
 
 
 @dataclass(frozen=True)
 class NavItem:
-    """Navigation menu item definition."""
+    """Navigation bar item."""
 
     id: str
     icon_path: str
@@ -32,41 +27,93 @@ class NavItem:
     type: NavItemType = NavItemType.TOOL
 
 
-class NavBar(QWidget):
-    """Icon-only navigation sidebar matching model.html design.
-
-    Features:
-    - Fixed width (48px)
-    - Icon-only buttons (no text labels)
-    - Selected item shows left blue border
-    - Signal emission for navigation events
-
-    Icon Requirements:
-    - All icons must be SVG files in assets/icons/
-    - Icon paths are validated at button creation
-    - If icon not found, button displays without icon
-    """
-
-    # Signal emitted when navigation item clicked
-    item_clicked = pyqtSignal(str)  # Emits item id
-
-    # Styling constants matching model.html
-    WIDTH = 48
-    ITEM_HEIGHT = 40
+class NavBarSeparator(QWidget):
+    """Horizontal separator widget for navbar."""
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self.setFixedHeight(1)
+        self.setObjectName("NavBarSeparator")
+
+
+class NavBarButton(QPushButton, StyledComponent):
+    """Navigation bar button with centered selection rectangle."""
+
+    PADDING = 4
+    BORDER_RADIUS = 6
+    ICON_SIZE = 16
+
+    def __init__(
+        self,
+        icon_path: str,
+        tooltip: str = "",
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self._apply_style("navbar_button.qss")
+
+        self.setObjectName("NavBarButton")
+        self.setIconSize(QSize(self.ICON_SIZE, self.ICON_SIZE))
+        self.setFixedSize(48, 40)
+        self.setText("")
+        self.setToolTip(tooltip)
+
+        if icon_path:
+            self.setIcon(QIcon(icon_path))
+
+        self._is_selected = False
+
+    def set_selected(self, selected: bool) -> None:
+        """Set button selection state."""
+        self._is_selected = selected
+        self.update()
+
+    def is_selected(self) -> bool:
+        """Get button selection state."""
+        return self._is_selected
+
+    def paintEvent(self, event) -> None:  # type: ignore
+        """Paint button with custom selection rectangle."""
+        super().paintEvent(event)
+
+        if self._is_selected:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+            rect = self.rect().adjusted(
+                self.PADDING,
+                self.PADDING,
+                -self.PADDING,
+                -self.PADDING,
+            )
+
+            painter.fillRect(
+                rect,
+                QColor(0, 95, 184, 10),
+            )
+
+            painter.setPen(QColor(0, 95, 184, 30))
+            painter.drawRoundedRect(rect, self.BORDER_RADIUS, self.BORDER_RADIUS)
+            painter.end()
+
+
+class NavBar(StyledComponent):
+    """Vertical navigation bar with icon buttons."""
+
+    STYLESHEET_NAME = "navbar.qss"
+    item_clicked = pyqtSignal(str)
+
+    WIDTH = 48
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent, "navbar.qss")
 
         self._selected_item_id: Optional[str] = None
-        self._items: dict[str, QPushButton] = {}
+        self._items: dict[str, NavBarButton] = {}
         self._nav_items: dict[str, NavItem] = {}
 
         self.setFixedWidth(self.WIDTH)
-        self.setStyleSheet("""
-            NavBar {
-                background-color: #F3F3F3;
-            }
-        """)
+        self.setObjectName("NavBar")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -84,21 +131,76 @@ class NavBar(QWidget):
         layout.addStretch()
         layout.addLayout(self._bottom_layout)
 
-    def add_item(self, item: NavItem) -> None:
-        """Add navigation item to navbar.
+        self._initialize_items()
 
-        Args:
-            item: NavItem defining the menu item
-        """
+    def _initialize_items(self) -> None:
+        """Initialize all navbar items."""
+        self.add_item(
+            NavItem(
+                id="editor",
+                icon_path="assets/icons/code.svg",
+                label="Editor",
+                tooltip="Code Editor",
+            )
+        )
+
+        self.add_item(
+            NavItem(
+                id="graph",
+                icon_path="assets/icons/graph.svg",
+                label="Graph",
+                tooltip="Computation Graph",
+            )
+        )
+
+        self.add_item(
+            NavItem(
+                id="training",
+                icon_path="assets/icons/training.svg",
+                label="Training",
+                tooltip="Model Training",
+            )
+        )
+
+        self.add_item(
+            NavItem(
+                id="model",
+                icon_path="assets/icons/model.svg",
+                label="Model",
+                tooltip="Model Inspector",
+            )
+        )
+
+        self.add_item(
+            NavItem(
+                id="dataset",
+                icon_path="assets/icons/dataset.svg",
+                label="Dataset",
+                tooltip="Dataset Management",
+            )
+        )
+
+        self.add_item(
+            NavItem(
+                id="sep1",
+                icon_path="",
+                type=NavItemType.SEPARATOR,
+            )
+        )
+
+        self.add_bottom_item(
+            NavItem(
+                id="settings",
+                icon_path="assets/icons/settings.svg",
+                label="Settings",
+                tooltip="Settings",
+            )
+        )
+
+    def add_item(self, item: NavItem) -> None:
+        """Add navigation item to main section."""
         if item.type == NavItemType.SEPARATOR:
-            separator = QWidget()
-            separator.setStyleSheet("""
-                QWidget {
-                    background-color: rgba(0, 0, 0, 0.06);
-                    height: 1px;
-                }
-            """)
-            separator.setFixedHeight(1)
+            separator = NavBarSeparator()
             self._main_layout.addWidget(separator)
             return
 
@@ -107,131 +209,48 @@ class NavBar(QWidget):
             return
 
         button = self._create_nav_button(item)
-        self._items[item.id] = button
-        self._nav_items[item.id] = item  # Store nav item
         self._main_layout.addWidget(button)
 
     def add_bottom_item(self, item: NavItem) -> None:
-        """Add item to bottom section of navbar (e.g., settings).
-
-        Args:
-            item: NavItem defining the menu item
-        """
+        """Add navigation item to bottom section."""
         if item.type != NavItemType.TOOL:
             return
 
         button = self._create_nav_button(item)
-        self._items[item.id] = button
-        self._nav_items[item.id] = item  # Store nav item
         self._bottom_layout.insertWidget(0, button)
 
-    def _create_nav_button(self, item: NavItem) -> QPushButton:
-        """Create styled navigation button.
-
-        Args:
-            item: NavItem to create button for
-
-        Returns:
-            Configured QPushButton
-        """
-        button = QPushButton()
-        button.setObjectName(item.id)
-        button.setIconSize(QSize(16, 16))
-        button.setFixedSize(self.WIDTH, self.ITEM_HEIGHT)
-
-        # Load and set icon if path exists
-        if item.icon_path:
-            try:
-                icon = QIcon(item.icon_path)
-                button.setIcon(icon)
-            except Exception:
-                pass
-
-        # Icons only - no text
-        button.setText("")
-        button.setToolTip(item.tooltip or item.label)
+    def _create_nav_button(self, item: NavItem) -> NavBarButton:
+        """Create and register a navigation button."""
+        button = NavBarButton(
+            icon_path=item.icon_path,
+            tooltip=item.tooltip or item.label,
+        )
 
         button.clicked.connect(lambda: self._on_item_clicked(item.id))
 
-        # Default unselected state
-        self._apply_unselected_style(button)
+        self._items[item.id] = button
+        self._nav_items[item.id] = item
 
         return button
 
-    def _apply_unselected_style(self, button: QPushButton) -> None:
-        """Apply unselected button style matching model.html."""
-        stylesheet = """
-            QPushButton {
-                background-color: transparent;
-                border: none;
-                border-left: 3px solid transparent;
-                padding: 8px 5px;
-                icon-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: rgba(0, 0, 0, 0.04);
-            }
-            QPushButton:pressed {
-                background-color: rgba(0, 0, 0, 0.08);
-            }
-        """
-        button.setStyleSheet(stylesheet)
-
-    def _apply_selected_style(self, button: QPushButton) -> None:
-        """Apply selected button style matching model.html exactly."""
-        stylesheet = """
-            QPushButton {
-                background-color: rgba(0, 0, 0, 0.04);
-                border: none;
-                border-left: 3px solid #005FB8;
-                padding: 8px 5px;
-                icon-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: rgba(0, 0, 0, 0.08);
-            }
-            QPushButton:pressed {
-                background-color: rgba(0, 0, 0, 0.12);
-            }
-        """
-        button.setStyleSheet(stylesheet)
-
     def _on_item_clicked(self, item_id: str) -> None:
-        """Handle navigation item click.
-
-        Args:
-            item_id: ID of clicked item
-        """
+        """Handle navigation item click."""
         self._set_selected_item(item_id)
         self.item_clicked.emit(item_id)
 
     def _set_selected_item(self, item_id: str) -> None:
-        """Update visual state for selected item.
-
-        Args:
-            item_id: ID of item to select
-        """
-        # Deselect previous
+        """Update visual state for selected item."""
         if self._selected_item_id and self._selected_item_id in self._items:
-            self._apply_unselected_style(self._items[self._selected_item_id])
+            self._items[self._selected_item_id].set_selected(False)
 
-        # Select new
         if item_id in self._items:
             self._selected_item_id = item_id
-            self._apply_selected_style(self._items[item_id])
+            self._items[item_id].set_selected(True)
 
     def get_selected_item_id(self) -> Optional[str]:
-        """Get ID of currently selected item.
-
-        Returns:
-            Item ID or None
-        """
+        """Get ID of currently selected item."""
         return self._selected_item_id
 
     def set_selected_item_by_id(self, item_id: str) -> None:
-        """Programmatically select an item by ID.
-
-        Args:
-            item_id: ID of item to select
-        """
+        """Programmatically select an item by ID."""
         self._set_selected_item(item_id)

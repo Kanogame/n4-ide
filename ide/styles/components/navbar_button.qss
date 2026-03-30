@@ -1,0 +1,13 @@
+NavBarButton {
+    background-color: transparent;
+    border: none;
+    padding: 4px;
+}
+
+NavBarButton:hover {
+    background-color: transparent;
+}
+
+NavBarButton:pressed {
+    background-color: transparent;
+}
