@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import pyqtSignal
 
-from ide.presentation.components.button import Button, ButtonStyle
-from ide.presentation.components.combobox import ComboBox
+from ide.presentation.components.common.button import Button, ButtonStyle
+from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.spinbox import SpinBox
 from ide.presentation.components.containers import FormField, Section
 

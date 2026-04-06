@@ -22,7 +22,6 @@ class NavItem:
 
     id: str
     icon_path: str
-    label: str = ""
     tooltip: str = ""
     type: NavItemType = NavItemType.TOOL
 
@@ -72,6 +71,7 @@ class NavBarButton(QPushButton, StyledComponent):
         """Get button selection state."""
         return self._is_selected
 
+    # TODO: remove
     def paintEvent(self, event) -> None:  # type: ignore
         """Paint button with custom selection rectangle."""
         super().paintEvent(event)
@@ -100,7 +100,6 @@ class NavBarButton(QPushButton, StyledComponent):
 class NavBar(StyledComponent):
     """Vertical navigation bar with icon buttons."""
 
-    STYLESHEET_NAME = "navbar.qss"
     item_clicked = pyqtSignal(str)
 
     WIDTH = 48
@@ -137,19 +136,17 @@ class NavBar(StyledComponent):
         """Initialize all navbar items."""
         self.add_item(
             NavItem(
-                id="editor",
+                id="code",
                 icon_path="assets/icons/code.svg",
-                label="Editor",
                 tooltip="Code Editor",
             )
         )
 
         self.add_item(
             NavItem(
-                id="graph",
-                icon_path="assets/icons/graph.svg",
-                label="Graph",
-                tooltip="Computation Graph",
+                id="dataset",
+                icon_path="assets/icons/dataset.svg",
+                tooltip="Dataset Management",
             )
         )
 
@@ -157,7 +154,6 @@ class NavBar(StyledComponent):
             NavItem(
                 id="training",
                 icon_path="assets/icons/training.svg",
-                label="Training",
                 tooltip="Model Training",
             )
         )
@@ -166,17 +162,15 @@ class NavBar(StyledComponent):
             NavItem(
                 id="model",
                 icon_path="assets/icons/model.svg",
-                label="Model",
                 tooltip="Model Inspector",
             )
         )
 
         self.add_item(
             NavItem(
-                id="dataset",
-                icon_path="assets/icons/dataset.svg",
-                label="Dataset",
-                tooltip="Dataset Management",
+                id="graph",
+                icon_path="assets/icons/graph.svg",
+                tooltip="Computation Graph",
             )
         )
 
@@ -192,7 +186,6 @@ class NavBar(StyledComponent):
             NavItem(
                 id="settings",
                 icon_path="assets/icons/settings.svg",
-                label="Settings",
                 tooltip="Settings",
             )
         )
@@ -223,7 +216,7 @@ class NavBar(StyledComponent):
         """Create and register a navigation button."""
         button = NavBarButton(
             icon_path=item.icon_path,
-            tooltip=item.tooltip or item.label,
+            tooltip=item.tooltip,
         )
 
         button.clicked.connect(lambda: self._on_item_clicked(item.id))

@@ -83,32 +83,6 @@ class EditorWidget(QWidget):
         backend_layout.addStretch()
         layout.addLayout(backend_layout)
 
-        # Редактор кода
-        self.editor = QsciScintilla()
-        font = QFont("JetBrains Mono", 11)
-
-        self.editor.setFont(font)
-        self.editor.setMarginType(
-            0,
-            QsciScintilla.MarginType.NumberMargin,
-        )
-        self.editor.setMarginWidth(0, "00000")
-
-        # Установка подсветки синтаксиса Python
-        lexer = QsciLexerPython()
-        lexer.setDefaultFont(font)
-        self.editor.setLexer(lexer)
-
-        # Настройки отступов
-        self.editor.setAutoIndent(True)
-        self.editor.setIndentationWidth(4)
-        self.editor.setTabWidth(4)
-
-        self.editor.setText(self._default_template())
-        self.editor.textChanged.connect(self._check_syntax)
-
-        layout.addWidget(self.editor)
-
     def get_code(self) -> str:
         """Получить текст кода из редактора."""
         return self.editor.text()

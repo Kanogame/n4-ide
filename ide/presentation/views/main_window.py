@@ -1,10 +1,4 @@
-"""
-Main window for N4-IDE.
-
-Provides the overall application layout with navbar, editor, graph, and bottom panels.
-Integrates styled components and navbar following N4-IDE architecture.
-"""
-
+from typing import Self
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QSplitter,
@@ -12,28 +6,24 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QStackedWidget,
 )
 
-from ide.presentation.components.editor_widget import EditorWidget
 from ide.presentation.components.graph_view import GraphView
 from ide.presentation.components.console_widget import ConsoleWidget
 from ide.presentation.components.dataset_panel import DatasetPanel
 from ide.presentation.components.weights_table import WeightsTable
 from ide.presentation.components.debug_panel import DebugPanel
-from ide.presentation.components.model_view import ModelView
+from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.navbar import NavBar
 from ide.presentation.common.styled_widget import StyledMainWindow
 
 
 class MainWindow(StyledMainWindow):
-    """Main N4-IDE window with collapsible navbar and tab-based panels.
+    """
+    Главное окно приложение, содержит navbar слева, а также главную панель
 
-    Architecture:
-    - Left sidebar: Icon-based collapsible navbar
-    - Center: Editor + Graph visualization (splitter)
-    - Bottom: Tabbed panels (Console, Weights, Dataset, Debug, Model)
-
-    All components communicate via signals, following presentation layer principles.
+    Все компоненты коммуницируют через сигналы
     """
 
     def __init__(self) -> None:
@@ -47,98 +37,66 @@ class MainWindow(StyledMainWindow):
         self._build_ui()
 
     def _build_ui(self) -> None:
-        """Build main application interface."""
+        """Собрать главный интерфейс"""
 
-        # Central layout with navbar + main content
         main_widget = QWidget()
-        main_layout = QHBoxLayout(main_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        self.main_layout = QHBoxLayout(main_widget)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
 
-        # Sidebar navbar
-        self.navbar = NavBar()
-        self._setup_navbar()
-        main_layout.addWidget(self.navbar)
+        # Navbar слева
+        self.setup_nabar()
 
-        # Main content area with splitters
-        content_layout = QVBoxLayout()
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.setSpacing(0)
+        # Панель справа
+        self.setup_panel_view()
 
-        # Top area: Editor + Graph (horizontal splitter)
-        top_splitter = QSplitter(Qt.Orientation.Horizontal)
+        # Создание всех разделов
+        self.setup_tabs()
 
-        self.editor = EditorWidget()
-        self.graph = GraphView()
-
-        top_splitter.addWidget(self.editor)
-        top_splitter.addWidget(self.graph)
-        top_splitter.setStretchFactor(0, 3)
-        top_splitter.setStretchFactor(1, 4)
-
-        # Bottom area: Tabbed panels
-        self.bottom_tabs = QTabWidget()
-
-        self.console = ConsoleWidget()
-        self.weights = WeightsTable()
-        self.dataset = DatasetPanel()
-        self.debug_panel = DebugPanel()
-        self.model_view = ModelView()
-
-        self.bottom_tabs.addTab(self.model_view, "Model")
-        self.bottom_tabs.addTab(self.console, "Console")
-        self.bottom_tabs.addTab(self.weights, "Weights")
-        self.bottom_tabs.addTab(self.dataset, "Dataset")
-        self.bottom_tabs.addTab(self.debug_panel, "Debug")
-
-        # Vertical splitter for top and bottom areas
-        main_splitter = QSplitter(Qt.Orientation.Vertical)
-        main_splitter.addWidget(top_splitter)
-        main_splitter.addWidget(self.bottom_tabs)
-        main_splitter.setStretchFactor(0, 4)
-        main_splitter.setStretchFactor(1, 1)
-
-        content_layout.addWidget(main_splitter)
-
-        # Add navbar + content to main widget
-        main_widget.setLayout(main_layout)
-        main_layout.addLayout(content_layout, 1)
-
+        # Установить главный виджет
         self.setCentralWidget(main_widget)
 
-    def _setup_navbar(self) -> None:
-        """Configure navbar items and connections.
+    def setup_nabar(self: Self) -> None:
+        self.navbar = NavBar()
 
-        Icon paths must exist in assets/icons/ directory.
-        Only the following icons are available:
-        - code.svg
-        - graph.svg
-        - training.svg
-        - model.svg
-        - dataset.svg
-        """
-
-        # Main navigation items
-
-        # Connect navbar signals
+        # Подключаем сигнал в _on_navbar_item_clicked
         self.navbar.item_clicked.connect(self._on_navbar_item_clicked)
-        self.navbar.set_selected_item_by_id("editor")
+
+        # Устанавливаем редактор кода как начальный раздел
+        self.navbar.set_selected_item_by_id("code")
+        self.main_layout.addWidget(self.navbar)
+
+    def setup_panel_view(self: Self) -> None:
+        self.content_layout = QVBoxLayout()
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setSpacing(0)
+
+        self.main_layout.addLayout(self.content_layout)
+
+    def setup_tabs(self: Self) -> None:
+
+        # Используем QStackedWidget чтобы быстро и легко
+        # менять разделы через setCurrentIndex
+        self.stacked = QStackedWidget()
+
+        self.model_view = ModelPanelView()
+        self.stacked.addWidget(self.model_view)
+
+        self.dataset = DatasetPanel()
+        self.stacked.addWidget(self.dataset)
+
+        self.content_layout.addWidget(self.stacked)
 
     def _on_navbar_item_clicked(self, item_id: str) -> None:
-        """Handle navbar item selection.
-
-        Args:
-            item_id: ID of selected navbar item
         """
-        # Map navbar items to bottom tabs
-        tab_mapping = {
-            "editor": -1,  # Editor stays visible
-            "graph": -1,  # Graph stays visible
-            "training": 0,  # Model tab
-            "debug": 4,  # Debug tab
-            "inspector": 2,  # Weights/Inspector tab
-            "settings": -1,  # Settings (implement later)
+        Обработчик сигнала кнопки navbar
+        """
+
+        # Мапим названия панелей к их id в stacked виджете
+        item_id_mapping = {
+            "code": 0,
+            "dataset": 1,
         }
 
-        if item_id in tab_mapping and tab_mapping[item_id] >= 0:
-            self.bottom_tabs.setCurrentIndex(tab_mapping[item_id])
+        # Вызываем смену
+        self.stacked.setCurrentIndex(item_id_mapping[item_id])
