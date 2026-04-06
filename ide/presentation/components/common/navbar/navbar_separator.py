@@ -1,9 +1,9 @@
-from ide.presentation.common.styled_widget import StyledComponent
+from ide.presentation.common.styled_widget import StyledMixin
 from typing import Optional
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QFrame
 
 
-class NavBarSeparator(StyledComponent):
+class NavBarSeparator(QFrame, StyledMixin):
     """Горизонтальный разделитель для навигационной панели.
 
     Компонент отображается как тонкая горизонтальная линия
@@ -16,6 +16,6 @@ class NavBarSeparator(StyledComponent):
         Args:
             parent: Родительский виджет.
         """
-        super().__init__(parent, "navbar.qss")
-        self.setObjectName("NavBarSeparator")
+        super().__init__(parent)
+        self._apply_style("navbar.qss")
         self.setFixedHeight(1)

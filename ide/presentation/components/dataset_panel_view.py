@@ -1,5 +1,4 @@
-from ide.presentation.components.common.panel import PanelView
-from ide.presentation.common.styled_widget import StyledComponent
+from ide.presentation.components.common.panel_view import PanelView
 from typing import Optional
 from PyQt6.QtWidgets import (
     QWidget,
@@ -11,10 +10,10 @@ from PyQt6.QtCore import pyqtSignal
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.spinbox import SpinBox
-from ide.presentation.components.containers import FormField, Section
+from ide.presentation.components.containers import FormField
 
 
-class DatasetPanelView(StyledComponent):
+class DatasetPanelView(QWidget):
     """Panel for managing synthetic dataset creation and parameters.
 
     Features:

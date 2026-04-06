@@ -1,14 +1,14 @@
 from typing import Optional
-from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QFrame
 from PyQt6.QtCore import pyqtSignal
 
-from ide.presentation.common.styled_widget import StyledComponent
+from ide.presentation.common.styled_widget import StyledMixin
 from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
 from ide.presentation.components.common.navbar.navbar_separator import NavBarSeparator
 
 
-class NavBar(StyledComponent):
+class NavBar(QFrame, StyledMixin):
     """Вертикальная навигационная панель с кнопками-иконками.
 
     Компонент размещает кнопки в две группы: основную панель и нижнюю,

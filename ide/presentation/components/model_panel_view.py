@@ -1,5 +1,4 @@
-from ide.presentation.components.common.panel import PanelView, PanelToolbar
-from ide.presentation.common.styled_widget import StyledComponent
+from ide.presentation.components.common.panel_view import PanelView, PanelToolbar
 
 import ast
 
@@ -37,7 +36,7 @@ class ModelInfo:
     code: str = ""
 
 
-class ModelPanelView(StyledComponent):
+class ModelPanelView(QWidget):
     """Панель визуализации и редактирования модели нейронной сети.
 
     Компонент отображает редактор кода модели и позволяет выбрать

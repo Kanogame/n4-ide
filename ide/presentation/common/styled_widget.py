@@ -1,60 +1,16 @@
 from pathlib import Path
 
 from typing import Optional, Self
-from PyQt6.QtWidgets import QWidget, QMainWindow, QFrame
+from PyQt6.QtWidgets import QWidget, QMainWindow
 
 
-class StyledWidget(QFrame):
-    """Базовый класс виджета с автоматической загрузкой QSS-стилей."""
-
-    def __init__(
-        self, parent: Optional[QWidget] = None, stylesheet_path: Optional[Path] = None
-    ) -> None:
-        """Инициализировать виджет и загрузить стиль.
-
-        Args:
-            parent: Родительский виджет.
-            stylesheet_path: Абсолютный путь к файлу QSS, или None.
-        """
-        super().__init__(parent)
-        self._load_stylesheet(stylesheet_path)
-
-    def _load_stylesheet(self, stylesheet_path: Optional[Path]) -> None:
-        """Загрузить и применить QSS-стиль к виджету.
-
-        Args:
-            stylesheet_path: Абсолютный путь к файлу QSS, или None.
-        """
-        if stylesheet_path is None:
-            return
-
-        try:
-            with open(stylesheet_path, "r", encoding="utf-8") as f:
-                self.setStyleSheet(f.read())
-        except FileNotFoundError:
-            print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")
-
-
-class StyledComponent(StyledWidget):
-    """Базовый класс компонента с автоматической загрузкой QSS-стилей.
-
-    Применяется только для компонентов, загружает стили из
-    ide/styles/components/ относительно корня пакета.
+class StyledMixin:
     """
+    Миксин для стилизации виджета с загрузкой QSS стиля
 
-    def __init__(
-        self,
-        parent: Optional[QWidget] = None,
-        stylesheet_name: Optional[str] = None,
-    ) -> None:
-        """Инициализировать компонент и загрузить стиль.
-
-        Args:
-            parent: Родительский виджет.
-            stylesheet_name: Имя файла QSS без пути (например, "panel.qss"), или None.
-        """
-        stylesheet_path = self._resolve_stylesheet_path(stylesheet_name)
-        super().__init__(parent, stylesheet_path)
+    Важно: не работает с QWidget, так как у этого базового виждета нет реализации с отрисовкой стилей
+    Рекомендовано использовать с QFrame
+    """
 
     @staticmethod
     def _resolve_stylesheet_path(stylesheet_name: Optional[str]) -> Optional[Path]:
@@ -86,6 +42,21 @@ class StyledComponent(StyledWidget):
         """
         stylesheet_path = self._resolve_stylesheet_path(stylesheet_name)
         self._load_stylesheet(stylesheet_path)
+
+    def _load_stylesheet(self: Self, stylesheet_path: Optional[Path]) -> None:
+        """Загрузить и применить QSS-стиль к виджету.
+
+        Args:
+            stylesheet_path: Абсолютный путь к файлу QSS, или None.
+        """
+        if stylesheet_path is None:
+            return
+
+        try:
+            with open(stylesheet_path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())  # type: ignore
+        except FileNotFoundError:
+            print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")
 
 
 class StyledMainWindow(QMainWindow):
