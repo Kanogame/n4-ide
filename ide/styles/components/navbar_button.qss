@@ -1,13 +1,20 @@
 NavBarButton {
     background-color: transparent;
+    border-radius: 3px;
     border: none;
-    padding: 4px;
+    padding: 4px 4px 4px 8px;
+    margin: 0px;
+    height: 30px;
+    width: 100%;
+    text-align: left;
 }
 
 NavBarButton:hover {
-    background-color: transparent;
+    background-color: #EAEAEA;
 }
 
-NavBarButton:pressed {
+NavBarButton[selected="true"] {
     background-color: transparent;
+    border-left: 3px solid #005FB8;
+    padding-left: 5px;
 }

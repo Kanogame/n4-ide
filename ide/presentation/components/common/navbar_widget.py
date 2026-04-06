@@ -1,127 +1,53 @@
-from enum import Enum, auto
 from typing import Optional
-from dataclasses import dataclass
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton
-from PyQt6.QtCore import pyqtSignal, QSize
-from PyQt6.QtGui import QIcon, QPainter, QColor
+from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtCore import pyqtSignal
 
 from ide.presentation.common.styled_widget import StyledComponent
-
-
-class NavItemType(Enum):
-    """Navigation item type for grouping."""
-
-    TOOL = auto()
-    SEPARATOR = auto()
-    SPACER = auto()
-
-
-@dataclass(frozen=True)
-class NavItem:
-    """Navigation bar item."""
-
-    id: str
-    icon_path: str
-    tooltip: str = ""
-    type: NavItemType = NavItemType.TOOL
-
-
-class NavBarSeparator(QWidget):
-    """Horizontal separator widget for navbar."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self.setFixedHeight(1)
-        self.setObjectName("NavBarSeparator")
-
-
-class NavBarButton(QPushButton, StyledComponent):
-    """Navigation bar button with centered selection rectangle."""
-
-    PADDING = 4
-    BORDER_RADIUS = 6
-    ICON_SIZE = 16
-
-    def __init__(
-        self,
-        icon_path: str,
-        tooltip: str = "",
-        parent: Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        self._apply_style("navbar_button.qss")
-
-        self.setObjectName("NavBarButton")
-        self.setIconSize(QSize(self.ICON_SIZE, self.ICON_SIZE))
-        self.setFixedSize(48, 40)
-        self.setText("")
-        self.setToolTip(tooltip)
-
-        if icon_path:
-            self.setIcon(QIcon(icon_path))
-
-        self._is_selected = False
-
-    def set_selected(self, selected: bool) -> None:
-        """Set button selection state."""
-        self._is_selected = selected
-        self.update()
-
-    def is_selected(self) -> bool:
-        """Get button selection state."""
-        return self._is_selected
-
-    # TODO: remove
-    def paintEvent(self, event) -> None:  # type: ignore
-        """Paint button with custom selection rectangle."""
-        super().paintEvent(event)
-
-        if self._is_selected:
-            painter = QPainter(self)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-
-            rect = self.rect().adjusted(
-                self.PADDING,
-                self.PADDING,
-                -self.PADDING,
-                -self.PADDING,
-            )
-
-            painter.fillRect(
-                rect,
-                QColor(0, 95, 184, 10),
-            )
-
-            painter.setPen(QColor(0, 95, 184, 30))
-            painter.drawRoundedRect(rect, self.BORDER_RADIUS, self.BORDER_RADIUS)
-            painter.end()
+from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
+from ide.presentation.components.common.navbar.navbar_button import NavBarButton
+from ide.presentation.components.common.navbar.navbar_separator import NavBarSeparator
 
 
 class NavBar(StyledComponent):
-    """Vertical navigation bar with icon buttons."""
+    """Вертикальная навигационная панель с кнопками-иконками.
+
+    Компонент размещает кнопки в две группы: основную панель и нижнюю,
+    разделённые растяжимым пространством. При нажатии на кнопку испускает
+    сигнал item_clicked с идентификатором элемента.
+
+    Signals:
+        item_clicked: Сигнал при нажатии на кнопку навигации (передаёт id).
+    """
 
     item_clicked = pyqtSignal(str)
 
     WIDTH = 48
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent, "navbar.qss")
+        """Инициализировать навигационную панель.
+
+        Args:
+            parent: Родительский виджет.
+        """
+        super().__init__(parent)
+        self._apply_style("navbar.qss")
+
+        self.setFixedWidth(self.WIDTH)
 
         self._selected_item_id: Optional[str] = None
         self._items: dict[str, NavBarButton] = {}
         self._nav_items: dict[str, NavItem] = {}
 
-        self.setFixedWidth(self.WIDTH)
-        self.setObjectName("NavBar")
-
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        # Основная панель для элементов сверху
         self._main_layout = QVBoxLayout()
         self._main_layout.setContentsMargins(0, 0, 0, 0)
         self._main_layout.setSpacing(0)
 
+        # Нижняя панель для элементов снизу
         self._bottom_layout = QVBoxLayout()
         self._bottom_layout.setContentsMargins(0, 0, 0, 0)
         self._bottom_layout.setSpacing(0)
@@ -133,7 +59,12 @@ class NavBar(StyledComponent):
         self._initialize_items()
 
     def _initialize_items(self) -> None:
-        """Initialize all navbar items."""
+        """Инициализировать все элементы навигационной панели.
+
+        Добавляет кнопки для доступа к основным разделам приложения:
+        редактор кода, управление данными, обучение, инспектор модели,
+        визуализация графа вычисления, и кнопку настроек.
+        """
         self.add_item(
             NavItem(
                 id="code",
@@ -191,7 +122,11 @@ class NavBar(StyledComponent):
         )
 
     def add_item(self, item: NavItem) -> None:
-        """Add navigation item to main section."""
+        """Добавить элемент в основную секцию навигационной панели.
+
+        Args:
+            item: Элемент навигации для добавления.
+        """
         if item.type == NavItemType.SEPARATOR:
             separator = NavBarSeparator()
             self._main_layout.addWidget(separator)
@@ -205,7 +140,11 @@ class NavBar(StyledComponent):
         self._main_layout.addWidget(button)
 
     def add_bottom_item(self, item: NavItem) -> None:
-        """Add navigation item to bottom section."""
+        """Добавить элемент в нижнюю секцию навигационной панели.
+
+        Args:
+            item: Элемент навигации для добавления.
+        """
         if item.type != NavItemType.TOOL:
             return
 
@@ -213,7 +152,14 @@ class NavBar(StyledComponent):
         self._bottom_layout.insertWidget(0, button)
 
     def _create_nav_button(self, item: NavItem) -> NavBarButton:
-        """Create and register a navigation button."""
+        """Создать и зарегистрировать кнопку навигации.
+
+        Args:
+            item: Элемент навигации для создания кнопки.
+
+        Returns:
+            Созданный объект NavBarButton.
+        """
         button = NavBarButton(
             icon_path=item.icon_path,
             tooltip=item.tooltip,
@@ -227,12 +173,20 @@ class NavBar(StyledComponent):
         return button
 
     def _on_item_clicked(self, item_id: str) -> None:
-        """Handle navigation item click."""
+        """Обработать нажатие на элемент навигации.
+
+        Args:
+            item_id: Идентификатор нажатого элемента.
+        """
         self._set_selected_item(item_id)
         self.item_clicked.emit(item_id)
 
     def _set_selected_item(self, item_id: str) -> None:
-        """Update visual state for selected item."""
+        """Обновить визуальное состояние выбранного элемента.
+
+        Args:
+            item_id: Идентификатор элемента для выделения.
+        """
         if self._selected_item_id and self._selected_item_id in self._items:
             self._items[self._selected_item_id].set_selected(False)
 
@@ -241,9 +195,17 @@ class NavBar(StyledComponent):
             self._items[item_id].set_selected(True)
 
     def get_selected_item_id(self) -> Optional[str]:
-        """Get ID of currently selected item."""
+        """Получить идентификатор текущего выбранного элемента.
+
+        Returns:
+            ID выбранного элемента, или None если элемент не выбран.
+        """
         return self._selected_item_id
 
     def set_selected_item_by_id(self, item_id: str) -> None:
-        """Programmatically select an item by ID."""
+        """Программно выбрать элемент по идентификатору.
+
+        Args:
+            item_id: Идентификатор элемента для выбора.
+        """
         self._set_selected_item(item_id)

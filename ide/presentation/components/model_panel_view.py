@@ -22,7 +22,14 @@ from ide.presentation.components.containers import FormField
 
 @dataclass(frozen=True)
 class ModelInfo:
-    """Immutable model information snapshot."""
+    """Неизменяемый снимок информации о модели.
+
+    Attributes:
+        backend: Имя вычислительного бекенда (по умолчанию "PyFloat").
+        layer_count: Количество слоёв в модели.
+        total_parameters: Общее количество параметров модели.
+        code: Исходный код модели.
+    """
 
     backend: str = "PyFloat"
     layer_count: int = 0
@@ -31,48 +38,66 @@ class ModelInfo:
 
 
 class ModelPanelView(StyledComponent):
-    """
-    Панель, которая отображает кодовый редактор модели, и позволяет выбрать бекенд
+    """Панель визуализации и редактирования модели нейронной сети.
+
+    Компонент отображает редактор кода модели и позволяет выбрать
+    вычислительный бекенд для выполнения.
+
+    Signals:
+        train_requested: Сигнал при нажатии на кнопку обучения.
+        backend_changed: Сигнал при изменении выбранного бекенда.
     """
 
-    # Сигнал нажатия на кнопку обучнея
+    # Сигнал при нажатии на кнопку обучения.
     train_requested = pyqtSignal()
 
-    # Сигнал выбора бекенда
-    backend_changed = pyqtSignal(str)  # Backend dropdown changed
+    # Сигнал при изменении выбора вычислительного бекенда.
+    backend_changed = pyqtSignal(str)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent, "")
+        """Инициализировать панель модели.
+
+        Args:
+            parent: Родительский виджет.
+        """
+        super().__init__(parent)
 
         self._current_model_info = ModelInfo()
 
-        # Базовый layout блока
+        # Основной layout панели
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Тулбар
+        # Создать панель с тулбаром
         toolbar = self.create_toolbar()
-
-        # Инициализация панели
         self.main_content = PanelView("Описание модели", toolbar)
 
-        # Селектор бекенда
+        # Создать выбор бекенда
         self.create_backend_selector()
 
-        # Редактор кода
+        # Создать редактор кода
         self.create_editor()
 
-        # Кнопки перехода и управления
+        # Создать кнопки управления
         self.create_buttons()
 
         layout.addWidget(self.main_content)
 
     def create_toolbar(self: Self) -> PanelToolbar:
-        # improve
+        """Создать тулбар панели.
+
+        Returns:
+            Экземпляр PanelToolbar с кнопками действий.
+        """
         return PanelToolbar()
 
     def create_backend_selector(self: Self) -> None:
+        """Создать выпадающий список выбора вычислительного бекенда.
+
+        Поддерживаемые бекенды: PyFloat, NumPy, PyTorch.
+        Подключает сигнал изменения на backend_changed.
+        """
         self.backend_combo = ComboBox()
         self.backend_combo.addItems(["PyFloat", "NumPy", "PyTorch"])
         self.backend_combo.value_changed.connect(self.backend_changed.emit)
@@ -81,6 +106,11 @@ class ModelPanelView(StyledComponent):
         self.main_content.add_widget(backend_field)
 
     def create_editor(self: Self) -> None:
+        """Создать редактор кода Python с подсветкой синтаксиса.
+
+        Настраивает подсветку синтаксиса, нумерацию строк, отступы
+        и проверку синтаксиса при изменении текста.
+        """
         self.editor = QsciScintilla()
         font = QFont("JetBrains Mono", 11)
 
@@ -91,22 +121,27 @@ class ModelPanelView(StyledComponent):
         )
         self.editor.setMarginWidth(0, "00000")
 
-        # Установка подсветки синтаксиса Python
+        # Установить подсветку синтаксиса Python
         lexer = QsciLexerPython()
         lexer.setDefaultFont(font)
         self.editor.setLexer(lexer)
 
-        # Настройки отступов
+        # Настроить отступы и автоматическое выравнивание
         self.editor.setAutoIndent(True)
         self.editor.setIndentationWidth(4)
         self.editor.setTabWidth(4)
 
+        # Установить шаблон по умолчанию
         self.editor.setText(self._default_template())
         self.editor.textChanged.connect(self._check_syntax)
 
         self.main_content.add_widget(self.editor)
 
     def create_buttons(self: Self) -> None:
+        """Создать кнопки управления панели.
+
+        Включает кнопку "Обучить" для запуска процесса обучения модели.
+        """
         buttons_layout = QHBoxLayout()
         buttons_layout.setSpacing(10)
         buttons_layout.addStretch()
@@ -151,7 +186,11 @@ class ModelPanelView(StyledComponent):
 
     @staticmethod
     def _default_template() -> str:
-        """Получить шаблон кода по умолчанию."""
+        """Получить шаблон кода модели по умолчанию.
+
+        Returns:
+            Строка с кодом шаблона класса модели.
+        """
         return """from typing import TypeVar
 from n4.nn import Model
 from n4 import Value
@@ -175,7 +214,15 @@ class MyModel(Model[T]):
 """
 
     def _check_syntax(self) -> bool:
-        """Проверить синтаксис Python кода и выделить ошибки."""
+        """Проверить синтаксис кода Python и выделить ошибки.
+
+        Использует ast.parse() для проверки корректности синтаксиса.
+        При обнаружении ошибок выделяет соответствующую строку
+        красным фоном в редакторе.
+
+        Returns:
+            True если синтаксис корректен, False иначе.
+        """
         code = self.editor.text()
 
         try:

@@ -193,6 +193,7 @@ finished.emit(ExecutionResult(success=True, output="OK"))
 ```
 
 **Benefits**:
+
 - Immutable prevents accidental mutations
 - IDE autocomplete for all fields
 - Serializable for persistence
@@ -228,6 +229,7 @@ assert result.node_type == NodeType.OPERATION
 ```
 
 **Benefits**:
+
 - Type-safe instead of magic strings
 - IDE catches typos
 - Prevents invalid values
@@ -268,41 +270,43 @@ except Exception as e:
 ### PyQt6 Patterns
 
 1. **Signals for Communication**: Never directly call methods on widgets
+
    ```python
    # ❌ WRONG: Direct coupling
    class Button(QPushButton):
        def on_click(self):
            self.parent().editor.run_code()
-   
+
    # ✅ CORRECT: Signals for decoupling
    class Button(QPushButton):
        run_requested = pyqtSignal(str)
-       
+
        def __init__(self):
            super().__init__()
            self.clicked.connect(self._on_click)
-       
+
        def _on_click(self):
            self.run_requested.emit(self.text())
    ```
 
 2. **Model/View Separation**: Custom Qt models for data binding
+
    ```python
    from PyQt6.QtCore import Qt, QAbstractTableModel, QModelIndex
-   
+
    class DataModel(QAbstractTableModel):
        """Separates data from UI."""
-       
+
        def __init__(self, data: list[dict]) -> None:
            super().__init__()
            self._data = data
-       
+
        def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
            return len(self._data)
-       
+
        def columnCount(self, parent: QModelIndex = QModelIndex()) -> int:
            return len(self._data[0]) if self._data else 0
-       
+
        def data(self, index: QModelIndex, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
            if role == Qt.ItemDataRole.DisplayRole:
                return self._data[index.row()][index.column()]
@@ -310,25 +314,26 @@ except Exception as e:
    ```
 
 3. **Threading for Blocking Operations**
+
    ```python
    from PyQt6.QtCore import QThread, pyqtSignal
-   
+
    class WorkerThread(QThread):
        finished = pyqtSignal(object)
        error = pyqtSignal(str)
        progress = pyqtSignal(int)
-       
+
        def __init__(self, work_fn: Callable[[], Any]) -> None:
            super().__init__()
            self.work_fn = work_fn
-       
+
        def run(self) -> None:
            try:
                result = self.work_fn()
                self.finished.emit(result)
            except Exception as e:
                self.error.emit(str(e))
-   
+
    # Usage
    thread = WorkerThread(lambda: expensive_computation())
    thread.finished.connect(on_done)
@@ -337,9 +342,10 @@ except Exception as e:
    ```
 
 4. **Slot Type Checking**: Verify signals match slots
+
    ```python
    from PyQt6.QtCore import Qt
-   
+
    # Set connection type to catch type mismatches early
    self.button.clicked.connect(
        self.on_button_clicked,
@@ -353,27 +359,28 @@ except Exception as e:
        """Save state and cleanup before close."""
        # Save settings
        QSettings("N4IDE", "N4IDE").setValue("geometry", self.saveGeometry())
-       
+
        # Stop threads
        if self.worker_thread.isRunning():
            self.worker_thread.quit()
            self.worker_thread.wait()
-       
+
        # Disconnect signals
        self.app.state_changed.disconnect()
-       
+
        super().closeEvent(event)
    ```
 
 ### Architecture Principles
 
 1. **Dependency Injection**: Components receive dependencies via constructor
+
    ```python
    # ❌ WRONG: Hard-coded dependency
    class Controller:
        def __init__(self):
            self.executor = CodeExecutor()  # Tightly coupled
-   
+
    # ✅ CORRECT: Injected dependency
    class Controller:
        def __init__(self, executor: CodeExecutor, app: Application):
@@ -382,46 +389,49 @@ except Exception as e:
    ```
 
 2. **Single Responsibility**: Each class does one thing
+
    ```python
    # ❌ WRONG: Multiple responsibilities
    class EditorWidget(QWidget):
        def execute_code(self): pass
        def render_graph(self): pass
        def save_file(self): pass
-   
+
    # ✅ CORRECT: Separated concerns
    class EditorWidget(QWidget):
        run_requested = pyqtSignal(str)  # Only emits signals
-   
+
    class EditorController:
        def run_code(self, code: str): pass  # Handles execution
-   
+
    class FileManager:
        def save_file(self, path: str, content: str): pass  # Handles I/O
    ```
 
 3. **Immutable Signal Data**: Signals carry immutable data
+
    ```python
    # ❌ WRONG: Mutable data passed through signal
    model_data = {"name": "Model"}
    signal.emit(model_data)
    model_data["name"] = "Modified"  # Receiver sees modified data!
-   
+
    # ✅ CORRECT: Use frozen dataclass
    @dataclass(frozen=True)
    class ModelData:
        name: str
-   
+
    signal.emit(ModelData(name="Model"))
    ```
 
 4. **Composition Over Inheritance**: Prefer composition
+
    ```python
    # ❌ WRONG: Deep inheritance hierarchy
    class BaseWidget(QWidget): pass
    class EditableWidget(BaseWidget): pass
    class ValidatedWidget(EditableWidget): pass
-   
+
    # ✅ CORRECT: Composition
    class Widget(QWidget):
        def __init__(self, editor: Editor, validator: Validator):
@@ -469,38 +479,42 @@ UI updates reflect new state
 ### Signal Flow Rules
 
 1. **UI → Controller**: Signals for user actions
+
    ```python
    class EditorWidget(QWidget):
        run_requested = pyqtSignal(str)  # Passes code to controller
    ```
 
 2. **Controller → Application**: Updates to central state
+
    ```python
    self.app.set_model(model)  # State change
    # Internally emits: Application.model_loaded
    ```
 
 3. **Application → UI**: UI observes application state
+
    ```python
    self.app.model_loaded.connect(self.graph.set_graph)
    self.app.output_received.connect(self.console.append_text)
    ```
 
 4. **No Direct Widget Access**: Never store references between widgets
+
    ```python
    # ❌ WRONG
    class EditorWidget:
        def __init__(self, graph_view):
            self.graph_view = graph_view  # Direct coupling
-       
+
        def run(self):
            result = execute()
            self.graph_view.set_graph(result)  # Tight coupling
-   
+
    # ✅ CORRECT
    class EditorWidget:
        run_requested = pyqtSignal(object)  # Emit signal
-   
+
    # In MainWindow
    self.editor.run_requested.connect(self.controller.run_code)
    self.app.model_loaded.connect(self.graph.set_graph)
@@ -532,13 +546,13 @@ from PyQt6.QtCore import pyqtSignal
 
 class StatsWidget(QWidget):
     """Display model statistics."""
-    
+
     def __init__(self) -> None:
         super().__init__()
         layout = QVBoxLayout(self)
         self.label = QLabel("No model loaded")
         layout.addWidget(self.label)
-    
+
     def set_stats(self, stats: ModelStats) -> None:
         """Update display with new statistics."""
         text = f"""
@@ -552,13 +566,13 @@ class StatsWidget(QWidget):
 # Step 3: Update Application to compute and emit stats
 class Application(QObject):
     stats_updated = pyqtSignal(ModelStats)
-    
+
     def set_model(self, model: Model) -> None:
         """Update model and compute stats."""
         self._model = model
         stats = self._compute_stats(model)
         self.stats_updated.emit(stats)
-    
+
     def _compute_stats(self, model: Model) -> ModelStats:
         """Extract statistics from model."""
         params = model.parameters()
@@ -575,7 +589,7 @@ class MainWindow(QMainWindow):
         # ... existing code ...
         self.stats = StatsWidget()
         bottom_tabs.addTab(self.stats, "Stats")
-        
+
         # Connect signal
         self.app.stats_updated.connect(self.stats.set_stats)
 ```
@@ -610,32 +624,32 @@ class CodeExecutor:
     ) -> ExecutionResult:
         """Execute code with optional profiling."""
         namespace = self.BUILTIN_NAMESPACE.copy()
-        
+
         if profile:
             profiler = cProfile.Profile()
             profiler.enable()
-        
+
         try:
             exec(code, namespace)
-            
+
             if profile:
                 profiler.disable()
                 profile_data = self._get_profile_stats(profiler)
             else:
                 profile_data = None
-            
+
             return ExecutionResult(
                 success=True,
                 namespace=namespace,
                 output=output_buffer.getvalue(),
                 profile_data=profile_data,
             )
-        
+
         except Exception as e:
             if profile:
                 profiler.disable()
             # ... error handling
-    
+
     def _get_profile_stats(self, profiler: cProfile.Profile) -> dict:
         """Extract profiling statistics."""
         s = StringIO()
@@ -661,21 +675,21 @@ import json
 
 class Application(QObject):
     """Enhanced with persistence."""
-    
+
     def save_state(self) -> None:
         """Save application state to disk."""
         settings = QSettings("N4IDE", "N4IDE")
-        
+
         # Save recent files
         if hasattr(self, '_recent_files'):
             settings.setValue("recent_files", json.dumps(self._recent_files))
-        
+
         # Save window state saved in MainWindow.closeEvent
-    
+
     def load_state(self) -> None:
         """Restore application state from disk."""
         settings = QSettings("N4IDE", "N4IDE")
-        
+
         recent = settings.value("recent_files", "[]")
         self._recent_files = json.loads(recent)
 
@@ -683,15 +697,15 @@ class MainWindow(QMainWindow):
     def __init__(self):
         # ... existing code ...
         self.app.load_state()
-    
+
     def closeEvent(self, event: QCloseEvent) -> None:
         """Save state before closing."""
         self.app.save_state()
-        
+
         settings = QSettings("N4IDE", "N4IDE")
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
-        
+
         super().closeEvent(event)
 ```
 
@@ -716,21 +730,21 @@ class LayerInfo:
 
 class ModelInspector:
     """Extract typed information from models."""
-    
+
     def inspect_layers(self, model: Model) -> list[LayerInfo]:
         """Get layer information."""
         layers = []
-        
+
         if isinstance(model, Sequential):
             for i, layer in enumerate(model.layers):
                 layers.append(self._inspect_layer(layer, i))
-        
+
         return layers
-    
+
     def _inspect_layer(self, layer: DenseLayer, index: int) -> LayerInfo:
         """Extract info from single layer."""
         params = layer.parameters()
-        
+
         return LayerInfo(
             layer_type=type(layer).__name__,
             parameters=[],  # TODO: extract from layer
@@ -755,9 +769,9 @@ from ide.domain.executor import CodeExecutor, ExecutionResult
 def test_successful_execution():
     """Code execution succeeds with valid code."""
     executor = CodeExecutor()
-    
+
     result = executor.execute("x = 1 + 1")
-    
+
     assert result.success
     assert result.namespace["x"] == 2
     assert result.error_message is None
@@ -765,18 +779,18 @@ def test_successful_execution():
 def test_execution_error():
     """Execution error captured."""
     executor = CodeExecutor()
-    
+
     result = executor.execute("raise ValueError('test')")
-    
+
     assert not result.success
     assert "ValueError" in result.error_message
 
 def test_n4_imports_available():
     """n4 library symbols available in namespace."""
     executor = CodeExecutor()
-    
+
     result = executor.execute("model = Sequential()")
-    
+
     assert result.success
     assert result.namespace["model"] is not None
 ```
@@ -795,12 +809,12 @@ def test_run_button_triggers_execution(qtbot):
     """Clicking run button emits signal with code."""
     window = MainWindow()
     qtbot.addWidget(window)
-    
+
     spy = QSignalSpy(window.editor.run_requested)
-    
+
     window.editor.editor.setText("x = 1")
     window.editor._on_run()
-    
+
     assert len(spy) == 1
     assert spy[0][0] == "x = 1"
 
@@ -808,12 +822,12 @@ def test_execution_updates_console(qtbot):
     """Execution output appears in console."""
     window = MainWindow()
     qtbot.addWidget(window)
-    
+
     code = "print('Hello, world!')"
     window.editor_controller.run_code(code)
-    
+
     qtbot.wait(500)  # Wait for thread
-    
+
     assert "Hello, world!" in window.console.text_edit.toPlainText()
 ```
 
@@ -833,12 +847,12 @@ def test_graph_rendering_performance():
         nodes={f"node_{i}": GraphNode(...) for i in range(10000)},
         edges=[GraphEdge(...) for _ in range(20000)],
     )
-    
+
     start = time.time()
     window = GraphView()
     window.set_graph(graph)
     elapsed = time.time() - start
-    
+
     assert elapsed < 1.0, f"Rendering took {elapsed}s (should be <1s)"
 ```
 
@@ -912,15 +926,15 @@ class GraphView(QGraphicsView):
     def set_graph(self, graph: ComputationGraph) -> None:
         """Render only visible portion of graph."""
         self.scene.clear()
-        
+
         # Viewport-based rendering
         visible_rect = self.mapToScene(self.viewport().rect()).boundingRect()
-        
+
         for node_id, node in graph.nodes.items():
             # Only render nodes in or near viewport
             if self._is_visible(node, visible_rect):
                 self.scene.addItem(GraphNodeItem(node, ...))
-    
+
     def _is_visible(self, node: GraphNode, visible_rect: QRectF) -> bool:
         """Check if node should be rendered."""
         margin = 100  # Render slightly outside viewport
@@ -940,11 +954,11 @@ class Application(QObject):
             # Disconnect any signals
             # Release large allocations
             del self._model
-        
+
         # Set new model
         self._model = model
         self.model_loaded.emit(model)
-    
+
     def __del__(self) -> None:
         """Cleanup on application exit."""
         if hasattr(self, '_model'):
@@ -960,20 +974,20 @@ from PyQt6.QtCore import QTimer
 
 class Application(QObject):
     output_received = pyqtSignal(str)
-    
+
     def __init__(self) -> None:
         super().__init__()
         self._output_buffer: list[str] = []
-        
+
         # Emit accumulated output every 100ms instead of per line
         self._flush_timer = QTimer()
         self._flush_timer.timeout.connect(self._flush_output)
         self._flush_timer.start(100)
-    
+
     def append_output(self, text: str) -> None:
         """Buffer output, not immediate signal."""
         self._output_buffer.append(text)
-    
+
     def _flush_output(self) -> None:
         """Emit accumulated output."""
         if self._output_buffer:
@@ -981,6 +995,46 @@ class Application(QObject):
             self.output_received.emit(combined)
             self._output_buffer.clear()
 ```
+
+### QSS Stylesheet Management
+
+**Always use absolute paths for stylesheet loading:**
+
+```python
+from pathlib import Path
+
+class StyledComponent(QWidget):
+    """Компонент с автоматической загрузкой QSS-стилей."""
+
+    def __init__(self, parent: Optional[QWidget] = None, stylesheet_name: Optional[str] = None) -> None:
+        super().__init__(parent)
+
+        # ❌ WRONG: Relative paths break when cwd changes
+        # path = Path(f"ide/styles/components/{stylesheet_name}")
+
+        # ✅ CORRECT: Use __file__ to build absolute path
+        if stylesheet_name:
+            ide_root = Path(__file__).parent.parent  # Navigate to ide/
+            stylesheet_path = ide_root / "styles" / "components" / stylesheet_name
+            self._load_stylesheet(stylesheet_path)
+
+    def _load_stylesheet(self, path: Path) -> None:
+        """Загрузить и применить стиль с обработкой ошибок."""
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Предупреждение: Файл стиля не найден: {path}")
+```
+
+**Best practices for QSS styling:**
+
+- Use `setObjectName()` for CSS selectors in QSS files
+- Load stylesheets once in `__init__`, not on every method call
+- Use CSS pseudo-classes: `:hover`, `:pressed`, `:focus`, `:disabled`
+- Use margins/padding in QSS, not `setContentsMargins()` when styling is needed
+- Avoid hardcoded colors; use CSS variables or a theme system
+- Test stylesheets with simple test case before deploying
 
 ---
 
@@ -991,6 +1045,7 @@ class Application(QObject):
 **Symptoms**: Slot never called when signal emitted
 
 **Debugging**:
+
 ```python
 # Check signal connection
 button.clicked.connect(self.on_click)
@@ -1008,6 +1063,7 @@ assert len(spy) > 0, "Signal not emitted"
 **Symptoms**: Thread hangs indefinitely
 
 **Debugging**:
+
 ```python
 # Add debug output
 class CodeExecutionThread(QThread):
@@ -1029,6 +1085,7 @@ timer.start(60000)  # 60 second timeout
 **Symptoms**: Graph doesn't reflect new model
 
 **Debugging**:
+
 ```python
 # Verify signal is emitted
 self.app.model_loaded.connect(
@@ -1049,6 +1106,7 @@ self.scene.setSceneRect(self.scene.itemsBoundingRect())
 **Symptoms**: Console doesn't show all program output
 
 **Debugging**:
+
 ```python
 # Verify output capture is active
 old_stdout = sys.stdout
@@ -1066,6 +1124,7 @@ code = "import sys; sys.stderr.write('test')"
 **Symptoms**: "Cannot perform operation on different backends" error
 
 **Solution**: Ensure all Tensors/Values use same backend:
+
 ```python
 # ❌ WRONG: Mixing backends
 v1 = Value.from_float(1.0, PyFloat)

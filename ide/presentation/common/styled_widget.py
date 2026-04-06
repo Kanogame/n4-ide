@@ -1,65 +1,129 @@
-"""
-Base widget class with automatic stylesheet loading.
-
-Provides a consistent pattern for loading QSS stylesheets from files
-relative to the ide/styles/components/ directory.
-"""
-
 from pathlib import Path
 
 from typing import Optional, Self
-from PyQt6.QtWidgets import QWidget, QMainWindow
+from PyQt6.QtWidgets import QWidget, QMainWindow, QFrame
 
 
-class StyledWidget(QWidget):
-    """
-    Виджет-base class с автоматической загрузкой QSS-стилей
-    """
+class StyledWidget(QFrame):
+    """Базовый класс виджета с автоматической загрузкой QSS-стилей."""
 
     def __init__(
         self, parent: Optional[QWidget] = None, stylesheet_path: Optional[Path] = None
     ) -> None:
+        """Инициализировать виджет и загрузить стиль.
+
+        Args:
+            parent: Родительский виджет.
+            stylesheet_path: Абсолютный путь к файлу QSS, или None.
+        """
         super().__init__(parent)
         self._load_stylesheet(stylesheet_path)
 
     def _load_stylesheet(self, stylesheet_path: Optional[Path]) -> None:
+        """Загрузить и применить QSS-стиль к виджету.
+
+        Args:
+            stylesheet_path: Абсолютный путь к файлу QSS, или None.
+        """
         if stylesheet_path is None:
             return
 
-        with open(stylesheet_path, "r") as f:
-            self.setStyleSheet(f.read())
+        try:
+            with open(stylesheet_path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")
 
 
 class StyledComponent(StyledWidget):
-    """
-    Виджет-base class с автоматической загрузкой QSS-стилей
+    """Базовый класс компонента с автоматической загрузкой QSS-стилей.
 
-    Применяется только для компонентов
+    Применяется только для компонентов, загружает стили из
+    ide/styles/components/ относительно корня пакета.
     """
 
     def __init__(
-        self, parent: Optional[QWidget] = None, stylesheet_name: Optional[str] = None
+        self,
+        parent: Optional[QWidget] = None,
+        stylesheet_name: Optional[str] = None,
     ) -> None:
-        super().__init__(
-            parent,
-            Path(f"ide/styles/components/{stylesheet_name}")
-            if stylesheet_name
-            else None,
-        )
+        """Инициализировать компонент и загрузить стиль.
+
+        Args:
+            parent: Родительский виджет.
+            stylesheet_name: Имя файла QSS без пути (например, "panel.qss"), или None.
+        """
+        stylesheet_path = self._resolve_stylesheet_path(stylesheet_name)
+        super().__init__(parent, stylesheet_path)
+
+    @staticmethod
+    def _resolve_stylesheet_path(stylesheet_name: Optional[str]) -> Optional[Path]:
+        """Разрешить абсолютный путь к файлу стиля компонента.
+
+        Args:
+            stylesheet_name: Имя файла стиля (например, "panel.qss"), или None.
+
+        Returns:
+            Абсолютный путь к файлу стиля, или None если stylesheet_name = None.
+        """
+        if stylesheet_name is None:
+            return None
+
+        # Получить директорию пакета ide/
+        ide_root = Path("ide")
+        stylesheet_path = ide_root / "styles" / "components" / stylesheet_name
+
+        if not stylesheet_path.exists():
+            print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")
+
+        return stylesheet_path
 
     def _apply_style(self: Self, stylesheet_name: str) -> None:
-        self._load_stylesheet(Path(f"ide/styles/components/{stylesheet_name}"))
+        """Применить новый стиль к компоненту.
+
+        Args:
+            stylesheet_name: Имя файла QSS в ide/styles/components/.
+        """
+        stylesheet_path = self._resolve_stylesheet_path(stylesheet_name)
+        self._load_stylesheet(stylesheet_path)
 
 
 class StyledMainWindow(QMainWindow):
-    """
-    Виджет-base class с автоматической загрузкой QSS-стилей
+    """Базовый класс главного окна с автоматической загрузкой QSS-стилей.
 
-    Применяется только для представлений
+    Применяется только для представлений (views), загружает стили из
+    ide/styles/views/main_window.qss.
     """
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """Инициализировать главное окно и загрузить стиль.
+
+        Args:
+            parent: Родительский виджет.
+        """
         super().__init__(parent)
 
-        with open(Path("ide/styles/views/main_window.qss"), "r") as f:
-            self.setStyleSheet(f.read())
+        stylesheet_path = self._resolve_stylesheet_path()
+        self._load_stylesheet(stylesheet_path)
+
+    @staticmethod
+    def _resolve_stylesheet_path() -> Path:
+        """Разрешить абсолютный путь к главному стилю окна.
+
+        Returns:
+            Абсолютный путь к ide/styles/views/main_window.qss.
+        """
+        ide_root = Path("ide")
+        return ide_root / "styles" / "views" / "main_window.qss"
+
+    def _load_stylesheet(self, stylesheet_path: Path) -> None:
+        """Загрузить и применить QSS-стиль к главному окну.
+
+        Args:
+            stylesheet_path: Абсолютный путь к файлу QSS.
+        """
+        try:
+            with open(stylesheet_path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")

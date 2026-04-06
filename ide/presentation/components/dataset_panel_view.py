@@ -1,3 +1,5 @@
+from ide.presentation.components.common.panel import PanelView
+from ide.presentation.common.styled_widget import StyledComponent
 from typing import Optional
 from PyQt6.QtWidgets import (
     QWidget,
@@ -12,7 +14,7 @@ from ide.presentation.components.spinbox import SpinBox
 from ide.presentation.components.containers import FormField, Section
 
 
-class DatasetPanel(QWidget):
+class DatasetPanelView(StyledComponent):
     """Panel for managing synthetic dataset creation and parameters.
 
     Features:
@@ -23,17 +25,25 @@ class DatasetPanel(QWidget):
     - Styled with consistent design system
     """
 
-    generate_requested = pyqtSignal()  # User clicked Generate
+    # Сигнал при нажатии на кнопку генерации датасета
+    generate_requested = pyqtSignal()
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
+        """Инициализировать панель датасета
+
+        Args:
+            parent: Родительский виджет.
+        """
+
         super().__init__(parent)
 
+        # Основной layout панели
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Main section
-        main_section = Section("Dataset Configuration")
+        # Создать панель
+        self.main_content = PanelView("Выбор датасета")
 
         # Preset selector
         self.preset_combo = ComboBox()
@@ -49,7 +59,7 @@ class DatasetPanel(QWidget):
         )
 
         preset_field = FormField("Dataset Preset", self.preset_combo)
-        main_section.add_widget(preset_field)
+        self.main_content.add_widget(preset_field)
 
         # Sample count
         self.samples_spinbox = SpinBox()
@@ -59,7 +69,7 @@ class DatasetPanel(QWidget):
         self.samples_spinbox.setSuffix(" samples")
 
         samples_field = FormField("Sample Count", self.samples_spinbox)
-        main_section.add_widget(samples_field)
+        self.main_content.add_widget(samples_field)
 
         # Test split
         self.test_split_spinbox = SpinBox()
@@ -69,7 +79,7 @@ class DatasetPanel(QWidget):
         self.test_split_spinbox.setSuffix("%")
 
         test_split_field = FormField("Test/Train Split", self.test_split_spinbox)
-        main_section.add_widget(test_split_field)
+        self.main_content.add_widget(test_split_field)
 
         # Action buttons
         buttons_layout = QHBoxLayout()
@@ -80,7 +90,7 @@ class DatasetPanel(QWidget):
         self.generate_button.clicked.connect(self.generate_requested.emit)
 
         buttons_layout.addWidget(self.generate_button)
-        main_section.add_layout(buttons_layout)
+        self.main_content.add_layout(buttons_layout)
 
-        layout.addWidget(main_section)
+        layout.addWidget(self.main_content)
         layout.addStretch()

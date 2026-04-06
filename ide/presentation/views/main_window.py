@@ -1,3 +1,4 @@
+from ide.presentation.components.common.navbar_widget import NavBar
 from typing import Self
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -11,11 +12,11 @@ from PyQt6.QtWidgets import (
 
 from ide.presentation.components.graph_view import GraphView
 from ide.presentation.components.console_widget import ConsoleWidget
-from ide.presentation.components.dataset_panel import DatasetPanel
 from ide.presentation.components.weights_table import WeightsTable
 from ide.presentation.components.debug_panel import DebugPanel
 from ide.presentation.components.model_panel_view import ModelPanelView
-from ide.presentation.components.navbar import NavBar
+from ide.presentation.components.dataset_panel_view import DatasetPanelView
+
 from ide.presentation.common.styled_widget import StyledMainWindow
 
 
@@ -82,7 +83,7 @@ class MainWindow(StyledMainWindow):
         self.model_view = ModelPanelView()
         self.stacked.addWidget(self.model_view)
 
-        self.dataset = DatasetPanel()
+        self.dataset = DatasetPanelView()
         self.stacked.addWidget(self.dataset)
 
         self.content_layout.addWidget(self.stacked)
