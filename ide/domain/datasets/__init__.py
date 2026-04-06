@@ -1,11 +1,5 @@
-"""Домен для работы с датасетами в N4-IDE.
-
-Содержит абстрактные интерфейсы и конкретные реализации датасетов
-для использования в нейронных сетях.
-"""
-
-from .base import Dataset, DatasetField, DatasetResult, FieldType
-from .xor import XORDataset
+from ide.domain.datasets.base import Dataset, DatasetField, DatasetResult, FieldType
+from ide.domain.datasets.xor import XORDataset
 
 # Реестр всех доступных датасетов, отображение имён на классы
 DATASET_REGISTRY: dict[str, type[Dataset]] = {

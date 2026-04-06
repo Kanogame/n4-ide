@@ -1,12 +1,6 @@
-"""Реализация датасета XOR для проверки нейронных сетей.
-
-Датасет XOR - классический пример задачи классификации, которую
-невозможно решить линейным классификатором.
-"""
-
 from typing import Any
 import numpy as np
-from .base import Dataset, DatasetField, DatasetResult, FieldType
+from ide.domain.datasets.base import Dataset, DatasetField, DatasetResult, FieldType
 
 
 class XORDataset(Dataset):

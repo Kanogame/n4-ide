@@ -1,9 +1,3 @@
-"""Компонент для визуализации данных датасета через matplotlib.
-
-Отображает двумерные данные в виде scatter plot с поддержкой
-различных цветов для разных классов.
-"""
-
 from typing import Optional, Any
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 

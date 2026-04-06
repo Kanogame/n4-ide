@@ -4,7 +4,6 @@ from ide.presentation.components.common.panel.panel_toolbar import PanelToolbar
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
-    QLabel,
     QLayout,
     QFrame,
 )
