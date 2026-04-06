@@ -1,19 +1,13 @@
 from ide.presentation.components.common.navbar_widget import NavBar
+from ide.domain.datasets.controller import DatasetGenerationWorker
 from typing import Self
-from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QSplitter,
-    QTabWidget,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QStackedWidget,
 )
 
-from ide.presentation.components.graph_view import GraphView
-from ide.presentation.components.console_widget import ConsoleWidget
-from ide.presentation.components.weights_table import WeightsTable
-from ide.presentation.components.debug_panel import DebugPanel
 from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.dataset_panel_view import DatasetPanelView
 
@@ -75,6 +69,13 @@ class MainWindow(StyledMainWindow):
         self.main_layout.addLayout(self.content_layout)
 
     def setup_tabs(self: Self) -> None:
+        """Создать все разделы приложения и подключить сигналы.
+
+        Включает:
+        - ModelPanelView для редактирования модели
+        - DatasetPanelView для генерации датасетов
+        - Подключение сигнала генерации датасета
+        """
 
         # Используем QStackedWidget чтобы быстро и легко
         # менять разделы через setCurrentIndex
@@ -88,9 +89,19 @@ class MainWindow(StyledMainWindow):
 
         self.content_layout.addWidget(self.stacked)
 
+        # Подключить сигнал генерации датасета
+        self.dataset.generate_requested.connect(self._on_dataset_generate_requested)
+
+        # Хранилище для текущего рабочего потока (только один может быть активен)
+        self.generation_worker: DatasetGenerationWorker | None = None
+
     def _on_navbar_item_clicked(self, item_id: str) -> None:
-        """
-        Обработчик сигнала кнопки navbar
+        """Обработчик сигнала кнопки navbar.
+
+        Переключает текущий раздел между доступными панелями.
+
+        Args:
+            item_id: Идентификатор выбранного пункта в навигации.
         """
 
         # Мапим названия панелей к их id в stacked виджете
@@ -101,3 +112,57 @@ class MainWindow(StyledMainWindow):
 
         # Вызываем смену
         self.stacked.setCurrentIndex(item_id_mapping[item_id])
+
+    def _on_dataset_generate_requested(
+        self,
+        config,
+    ) -> None:
+        """Обработчик сигнала генерации датасета.
+
+        Запускает рабочий поток для генерации датасета в фоне
+        и подключает сигналы для обновления UI.
+
+        Args:
+            config: DatasetConfig с именем датасета и параметрами.
+        """
+        # Остановить предыдущий рабочий поток если он работает
+        if self.generation_worker is not None and self.generation_worker.isRunning():
+            self.generation_worker.quit()
+            self.generation_worker.wait()
+
+        # Создать и запустить новый рабочий поток
+        self.generation_worker = DatasetGenerationWorker(
+            config.dataset_name,
+            config.parameters,
+        )
+
+        # Подключить сигналы завершения
+        self.generation_worker.finished.connect(self._on_dataset_generated)
+        self.generation_worker.error.connect(self._on_dataset_generation_error)
+
+        # Запустить поток
+        self.generation_worker.start()
+
+    def _on_dataset_generated(self, dataset_result) -> None:
+        """Обработчик успешной генерации датасета.
+
+        Отображает сгенерированный датасет в визуализаторе.
+
+        Args:
+            dataset_result: DatasetResult с массивами X и y.
+        """
+        self.dataset.visualizer.set_dataset(
+            dataset_result.X,
+            dataset_result.y,
+            title=dataset_result.title,
+        )
+
+    def _on_dataset_generation_error(self, error_message: str) -> None:
+        """Обработчик ошибки при генерации датасета.
+
+        Выводит сообщение об ошибке в консоль.
+
+        Args:
+            error_message: Текст сообщения об ошибке.
+        """
+        print(f"Ошибка генерации датасета: {error_message}")
