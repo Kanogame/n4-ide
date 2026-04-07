@@ -1,4 +1,4 @@
-from ide.presentation.components.common.splitter import HorizontalSplitter
+from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
 from typing import Optional, Self, Any
 from dataclasses import dataclass
 
@@ -13,7 +13,7 @@ from PyQt6.QtCore import pyqtSignal
 from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
 from ide.domain.datasets import FieldType
 
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.panel_view import PanelView
 from ide.presentation.components.dataset_panel.dataset_visualizer import (

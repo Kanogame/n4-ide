@@ -12,7 +12,7 @@ from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.dataset_panel_view import DatasetPanelView
 from ide.presentation.components.trainer_panel_view import TrainerPanelView
 
-from ide.presentation.common.styled_widget import StyledMainWindow
+from ide.presentation.common.mixins import StyledMainWindow
 
 
 class MainWindow(StyledMainWindow):

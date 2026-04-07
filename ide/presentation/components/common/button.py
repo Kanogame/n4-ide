@@ -1,27 +1,30 @@
-"""Button component for N4-IDE."""
+"""Кнопка для N4-IDE с поддержкой стилевых вариантов."""
 
 from enum import Enum, auto
 from typing import Optional
+
 from PyQt6.QtWidgets import QPushButton, QWidget
-from PyQt6.QtGui import QFont
+
+from ide.presentation.common.mixins import StyledMixin, FontMixin
 
 
 class ButtonStyle(Enum):
-    """Button style variants."""
+    """Варианты стилей кнопки."""
 
-    ACCENT = auto()  # Blue primary button
-    SECONDARY = auto()  # Light border button
-    DANGER = auto()  # Red for destructive actions
-    GHOST = auto()  # Text only
+    ACCENT = auto()  # Синяя основная кнопка
+    SECONDARY = auto()  # Кнопка с лёгкой границей
+    DANGER = auto()  # Красная кнопка для деструктивных действий
+    GHOST = auto()  # Кнопка без фона
 
 
-class Button(QPushButton):
-    """Styled push button matching N4-IDE design system.
+class Button(QPushButton, StyledMixin, FontMixin):
+    """Стилизованная кнопка, соответствующая дизайн-системе N4-IDE.
 
-    Features:
-    - Type-safe style variants
-    - Consistent padding and typography
-    - Smooth hover/active states
+    Поддерживает несколько вариантов стилей через перечисление ButtonStyle.
+    Стили загружаются из QSS файла и применяются через объектные имена.
+
+    Атрибуты:
+        style_variant: Текущий выбранный стиль кнопки (ButtonStyle).
     """
 
     def __init__(
@@ -30,110 +33,40 @@ class Button(QPushButton):
         style: ButtonStyle = ButtonStyle.ACCENT,
         parent: Optional[QWidget] = None,
     ) -> None:
+        """Инициализировать кнопку.
+
+        Args:
+            text: Текст, отображаемый на кнопке.
+            style: Вариант стиля из ButtonStyle.
+            parent: Родительский виджет.
+        """
         super().__init__(text, parent)
+        self._apply_style("button.qss")
+        self._apply_font(12)
+
+        # Сохранить выбранный стиль
         self.style_variant = style
-        self._apply_style()
 
-    def _apply_style(self) -> None:
-        """Apply stylesheet based on style variant."""
-        font = QFont("Open Sans", 14)
-        font.setWeight(QFont.Weight.Normal)
-        self.setFont(font)
+        # Установить объектное имя для селектора QSS
+        self._set_style_class()
 
-        padding = "padding: 5px 12px 7px 12px;"
-        border_radius = "border-radius: 4px;"
-
+    def _set_style_class(self) -> None:
+        """Установить объектное имя для соответствующего QSS класса."""
+        # Объектные имена используются в QSS селекторах
         if self.style_variant == ButtonStyle.ACCENT:
-            stylesheet = f"""
-                QPushButton {{
-                    {padding}
-                    background-color: #005FB8;
-                    color: white;
-                    border: 1px solid #2D7AC2;
-                    {border_radius}
-                    font-weight: 400;
-                }}
-                QPushButton:hover {{
-                    background-color: #004A92;
-                }}
-                QPushButton:pressed {{
-                    background-color: #003A70;
-                }}
-                QPushButton:disabled {{
-                    background-color: #CCCCCC;
-                    color: #666666;
-                    border: 1px solid #EEEEEE;
-                }}
-            """
+            self.setObjectName("ButtonAccent")
         elif self.style_variant == ButtonStyle.SECONDARY:
-            stylesheet = f"""
-                QPushButton {{
-                    {padding}
-                    background-color: rgba(255, 255, 255, 0.70);
-                    color: rgba(0, 0, 0, 0.90);
-                    border: 1px solid black;
-                    {border_radius}
-                    font-weight: 400;
-                }}
-                QPushButton:hover {{
-                    background-color: white;
-                    border: 1px solid #005FB8;
-                }}
-                QPushButton:pressed {{
-                    background-color: rgba(0, 95, 184, 0.1);
-                }}
-                QPushButton:disabled {{
-                    background-color: #F5F5F5;
-                    color: #CCCCCC;
-                    border: 1px solid #EEEEEE;
-                }}
-            """
+            self.setObjectName("ButtonSecondary")
         elif self.style_variant == ButtonStyle.DANGER:
-            stylesheet = f"""
-                QPushButton {{
-                    {padding}
-                    background-color: #DA3633;
-                    color: white;
-                    border: 1px solid #C5221F;
-                    {border_radius}
-                    font-weight: 400;
-                }}
-                QPushButton:hover {{
-                    background-color: #B71C1C;
-                }}
-                QPushButton:pressed {{
-                    background-color: #A91610;
-                }}
-                QPushButton:disabled {{
-                    background-color: #CCCCCC;
-                    color: #666666;
-                    border: 1px solid #EEEEEE;
-                }}
-            """
+            self.setObjectName("ButtonDanger")
         else:  # GHOST
-            stylesheet = f"""
-                QPushButton {{
-                    {padding}
-                    background-color: transparent;
-                    color: rgba(0, 0, 0, 0.90);
-                    border: none;
-                    {border_radius}
-                    font-weight: 400;
-                }}
-                QPushButton:hover {{
-                    background-color: rgba(0, 95, 184, 0.08);
-                }}
-                QPushButton:pressed {{
-                    background-color: rgba(0, 95, 184, 0.15);
-                }}
-                QPushButton:disabled {{
-                    color: #CCCCCC;
-                }}
-            """
-
-        self.setStyleSheet(stylesheet)
+            self.setObjectName("ButtonGhost")
 
     def set_style(self, style: ButtonStyle) -> None:
-        """Change button style variant."""
+        """Изменить вариант стиля кнопки.
+
+        Args:
+            style: Новый вариант стиля из ButtonStyle.
+        """
         self.style_variant = style
-        self._apply_style()
+        self._set_style_class()

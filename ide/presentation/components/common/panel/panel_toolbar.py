@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QFrame,
 )
 from typing import Self, Optional
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 
 
 class PanelToolbar(QFrame, StyledMixin):

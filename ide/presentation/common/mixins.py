@@ -1,3 +1,4 @@
+from PyQt6.QtGui import QFont
 from pathlib import Path
 
 from typing import Optional, Self
@@ -57,6 +58,20 @@ class StyledMixin:
                 self.setStyleSheet(f.read())  # type: ignore
         except FileNotFoundError:
             print(f"Предупреждение: Файл стиля не найден: {stylesheet_path}")
+
+
+class FontMixin:
+    """
+    Миксин для приминения шрифта. Всегда используется Open Sans
+    """
+
+    def _apply_font(
+        self: Self, size: int = 14, weight: QFont.Weight = QFont.Weight.Normal
+    ) -> None:
+        """Применить шрифт"""
+        font = QFont("Open Sans", size)
+        font.setWeight(weight)
+        self.setFont(font)  # type: ignore
 
 
 class StyledMainWindow(QMainWindow):

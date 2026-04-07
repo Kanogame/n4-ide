@@ -1,4 +1,4 @@
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 from typing import Optional
 from PyQt6.QtWidgets import QWidget, QFrame
 

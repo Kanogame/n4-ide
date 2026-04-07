@@ -1,4 +1,4 @@
-from ide.presentation.components.common.splitter import HorizontalSplitter
+from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
 from typing import Optional, Self
 
 from PyQt6.QtWidgets import (

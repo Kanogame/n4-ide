@@ -1,5 +1,5 @@
 from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.panel.panel_content import PanelContent
 from ide.presentation.components.common.panel.panel_toolbar import PanelToolbar
 from PyQt6.QtWidgets import (

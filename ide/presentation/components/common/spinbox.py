@@ -3,10 +3,10 @@ from typing import Optional
 from PyQt6.QtWidgets import QSpinBox, QWidget
 from PyQt6.QtCore import pyqtSignal
 
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin, FontMixin
 
 
-class SpinBox(QSpinBox, StyledMixin):
+class SpinBox(QSpinBox, StyledMixin, FontMixin):
     """
     Spinbox - Инпут с инкремент/декремент кнопками
     """
@@ -21,8 +21,10 @@ class SpinBox(QSpinBox, StyledMixin):
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
+        self._apply_style("spinbox.qss")
+        self._apply_font()
+
         self.setMinimum(min)
         self.setMaximum(max)
         self.setSingleStep(step)
-        self._apply_style("spinbox.qss")
         self.valueChanged.connect(self.value_changed.emit)

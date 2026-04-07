@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt
 
 from typing import Self
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 from PyQt6.QtWidgets import QSplitter, QWidget, QSizePolicy
 
 

@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
 )
 from typing import Self, Optional
 from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 
 
 class PanelContent(QFrame, StyledMixin):

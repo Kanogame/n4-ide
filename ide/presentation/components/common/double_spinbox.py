@@ -3,10 +3,10 @@ from typing import Optional
 from PyQt6.QtWidgets import QDoubleSpinBox, QWidget
 from PyQt6.QtCore import pyqtSignal
 
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin, FontMixin
 
 
-class DoubleSpinBox(QDoubleSpinBox, StyledMixin):
+class DoubleSpinBox(QDoubleSpinBox, StyledMixin, FontMixin):
     """Стилизованное поле ввода чисел с плавающей точкой. С инкрементом/дектементом"""
 
     # Сигнал при изменении значения.
@@ -21,9 +21,11 @@ class DoubleSpinBox(QDoubleSpinBox, StyledMixin):
     ) -> None:
         """Инициализировать компонент ввода дробного числа"""
         super().__init__(parent)
+        self._apply_style("double_spinbox.qss")
+        self._apply_font()
+
         self.setMinimum(min)
         self.setMaximum(max)
         self.setSingleStep(step)
         self.setDecimals(4)
-        self._apply_style("double_spinbox.qss")
         self.valueChanged.connect(self.value_changed.emit)

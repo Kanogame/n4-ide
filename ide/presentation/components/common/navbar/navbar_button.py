@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QWidget, QPushButton
 from PyQt6.QtCore import QSize, QRect, Qt
 from PyQt6.QtGui import QIcon, QPainter, QColor, QPaintEvent
 
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 
 
 class NavBarButton(QPushButton, StyledMixin):

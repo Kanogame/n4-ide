@@ -1,0 +1,94 @@
+/* Основной синий стиль */
+#ButtonAccent {
+    padding: 5px 12px 7px 12px;
+    background-color: #005FB8;
+    color: white;
+    border: 1px solid #2D7AC2;
+    border-bottom: 1px solid #0A3C6B;
+    border-radius: 4px;
+    font-weight: 400;
+}
+
+#ButtonAccent:hover {
+    background-color: #10518E;
+}
+
+#ButtonAccent:pressed {
+    background-color: #003A70;
+}
+
+#ButtonAccent:disabled {
+    background-color: #CCCCCC;
+    color: #666666;
+    border: 1px solid #EEEEEE;
+}
+
+/* Вторичный стиль с лёгкой границей */
+#ButtonSecondary {
+    padding: 5px 12px 7px 12px;
+    color: rgba(0, 0, 0, 0.90);
+    border: 1px solid #EAEAEA;
+
+    border-bottom: 1px solid #D6D6D6;
+    border-radius: 4px;
+    font-weight: 400;
+}
+
+#ButtonSecondary:hover {
+    border: 1px solid #D6D6D6;
+}
+
+#ButtonSecondary:pressed {
+    background-color: #EAEAEA;
+}
+
+#ButtonSecondary:disabled {
+    background-color: #F5F5F5;
+    color: #CCCCCC;
+    border: 1px solid #EEEEEE;
+}
+
+/* Деструктивный стиль - красный */
+#ButtonDanger {
+    padding: 5px 12px 7px 12px;
+    background-color: #DA3633;
+    color: white;
+    border: 1px solid #C5221F;
+    border-radius: 4px;
+    font-weight: 400;
+}
+
+#ButtonDanger:hover {
+    background-color: #B71C1C;
+}
+
+#ButtonDanger:pressed {
+    background-color: #A91610;
+}
+
+#ButtonDanger:disabled {
+    background-color: #CCCCCC;
+    color: #666666;
+    border: 1px solid #EEEEEE;
+}
+
+/* Прозрачный стиль без фона */
+#ButtonGhost {
+    padding: 5px 12px 7px 12px;
+    background-color: transparent;
+    color: rgba(0, 0, 0, 0.90);
+    border: none;
+    border-radius: 4px;
+}
+
+#ButtonGhost:hover {
+    background-color: rgba(0, 95, 184, 0.08);
+}
+
+#ButtonGhost:pressed {
+    background-color: rgba(0, 95, 184, 0.15);
+}
+
+#ButtonGhost:disabled {
+    color: #CCCCCC;
+}

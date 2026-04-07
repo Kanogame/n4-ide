@@ -4,7 +4,7 @@ from PyQt6.QtCore import pyqtSignal
 
 
 from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
 from ide.presentation.components.common.navbar.navbar_separator import NavBarSeparator
