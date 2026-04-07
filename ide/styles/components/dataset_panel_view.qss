@@ -5,13 +5,10 @@
 
 #DatasetScroll {
     border: none;
+    padding: 10px;
 }
 
 #DatasetParams {
     background-color: #fff;
-}
-
-#DatasetParamsLayout {
-    border: 20px solid red;
-    padding 10px;
+    margin: 10px;
 }

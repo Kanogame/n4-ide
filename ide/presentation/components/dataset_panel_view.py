@@ -120,9 +120,7 @@ class DatasetPanelView(QWidget, StyledMixin):
 
         # Левая панель сплиттера
         self.left_widget = QWidget()
-        self.left_layout = QVBoxLayout(self.left_widget)
-        self.left_layout.setContentsMargins(0, 0, 0, 0)
-        self.left_layout.setSpacing(0)
+        self.left_layout = create_layout(self.left_widget)
 
         # Скроллируемая область для параметров
         scroll = QScrollArea()
@@ -132,8 +130,8 @@ class DatasetPanelView(QWidget, StyledMixin):
         # Виджет-контейнер для полей параметров
         self.params_container = QWidget()
         self.params_layout = create_layout(self.params_container, 12)
-        self.params_layout.setObjectName("DatasetParamsLayout")
         self.params_container.setObjectName("DatasetParams")
+        self.params_layout.setObjectName("DatasetParamsLayout")
 
         scroll.setWidget(self.params_container)
         self.left_layout.addWidget(scroll)

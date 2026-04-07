@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
     QLabel,
 )
 from typing import Self, Optional
+from ide.presentation.common.layouts import create_layout
 from ide.presentation.common.styled_widget import StyledMixin
 
 
@@ -26,9 +27,7 @@ class PanelContent(QFrame, StyledMixin):
         super().__init__(parent)
         self._apply_style("panel.qss")
 
-        self._main_layout = QVBoxLayout(self)
-        self._main_layout.setContentsMargins(0, 0, 0, 0)
-        self._main_layout.setSpacing(12)
+        self._main_layout = create_layout(self, 12)
 
         # Добавить заголовок
         title_label = QLabel(title)
