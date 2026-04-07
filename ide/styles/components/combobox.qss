@@ -1,0 +1,42 @@
+ComboBox {
+    padding: 4px 11px;
+    background-color: #fff;
+    border-radius: 6px;
+    border: 1px solid #EAEAEA;
+    border-bottom: 1px solid #D6D6D6;
+    color: rgba(0, 0, 0, 0.90);
+
+    font-family: "Open Sans";
+    font-size: 14px;
+}
+
+ComboBox:hover {
+    border-bottom: 1px solid #005FB8;
+}
+
+ComboBox:focus {
+    border-bottom: 1px solid #005FB8;
+}
+
+ComboBox::drop-down {
+    border: none;
+    width: 12px;
+    margin-right: 4px;
+}
+
+ComboBox::drop-down:button {
+    background-color: transparent;
+}
+
+QAbstractItemView {
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 3px;
+    selection-background-color: #005FB8;
+    color: rgba(0, 0, 0, 0.90);
+}
+
+QAbstractItemView::item:selected {
+    background-color: #005FB8;
+    color: white;
+}
