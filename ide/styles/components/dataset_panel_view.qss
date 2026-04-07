@@ -1,14 +1,16 @@
 #DatasetSplitter {
     border: 1px solid #EAEAEA;
     border-radius: 8px;
-    }
+    background-color: #fff;
+    height: 100%;
+}
 
 #DatasetScroll {
     border: none;
     padding: 10px;
+    background-color: #fff;
 }
 
 #DatasetParams {
     background-color: #fff;
-    margin: 10px;
 }

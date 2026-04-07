@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QHBoxLayout,
     QScrollArea,
     QSplitter,
     QLineEdit,
+    QSizePolicy,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 
@@ -15,9 +15,11 @@ from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
 from ide.domain.datasets import FieldType
 
 from ide.presentation.common.styled_widget import StyledMixin
-from ide.presentation.common.layouts import create_layout
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.panel_view import PanelView
-from ide.presentation.components.dataset_visualizer import DatasetVisualizerWidget
+from ide.presentation.components.dataset_panel.dataset_visualizer import (
+    DatasetVisualizerWidget,
+)
 from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
@@ -55,16 +57,12 @@ class DatasetPanelView(QWidget, StyledMixin):
     generate_requested = pyqtSignal(DatasetConfig)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
-        """Инициализировать панель датасета.
-
-        Args:
-            parent: Родительский виджет.
-        """
+        """Инициализировать панель датасета"""
         super().__init__(parent)
         self._apply_style("dataset_panel_view.qss")
 
         # Основной layout панели
-        layout = create_layout(self)
+        layout = create_vertical_layout(self)
 
         # Создать панель
         self.main_content = PanelView("Выбор датасета")
@@ -75,6 +73,11 @@ class DatasetPanelView(QWidget, StyledMixin):
         # Сплиттер для разделения конфигурации и визуализации
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setObjectName("DatasetSplitter")
+
+        # Добавляем растягивание (аналогично flex: 1)
+        splitter.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.main_content.add_widget(splitter)
 
         # Создать контейнер для динамических полей параметров
@@ -89,9 +92,8 @@ class DatasetPanelView(QWidget, StyledMixin):
         self.visualizer = DatasetVisualizerWidget()
         splitter.addWidget(self.visualizer)
 
-        # Установить соотношение размеров (40/60)
-        splitter.setStretchFactor(0, 2)
-        splitter.setStretchFactor(1, 3)
+        # Установить соотношение размеров
+        splitter.setSizes([1, 1])
 
         layout.addWidget(self.main_content)
 
@@ -120,7 +122,7 @@ class DatasetPanelView(QWidget, StyledMixin):
 
         # Левая панель сплиттера
         self.left_widget = QWidget()
-        self.left_layout = create_layout(self.left_widget)
+        self.left_layout = create_vertical_layout(self.left_widget)
 
         # Скроллируемая область для параметров
         scroll = QScrollArea()
@@ -129,7 +131,7 @@ class DatasetPanelView(QWidget, StyledMixin):
 
         # Виджет-контейнер для полей параметров
         self.params_container = QWidget()
-        self.params_layout = create_layout(self.params_container, 12)
+        self.params_layout = create_vertical_layout(self.params_container, 12)
         self.params_container.setObjectName("DatasetParams")
         self.params_layout.setObjectName("DatasetParamsLayout")
 

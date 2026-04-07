@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QFrame
 from PyQt6.QtCore import pyqtSignal
 
 
-from ide.presentation.common.layouts import create_layout
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.styled_widget import StyledMixin
 from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
@@ -40,7 +40,7 @@ class NavBar(QFrame, StyledMixin):
         self._items: dict[str, NavBarButton] = {}
         self._nav_items: dict[str, NavItem] = {}
 
-        layout = create_layout(self)
+        layout = create_vertical_layout(self)
 
         # Основная панель для элементов сверху
         self._main_layout = QVBoxLayout()

@@ -1,10 +1,9 @@
-from ide.presentation.common.layouts import create_layout
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.styled_widget import StyledMixin
 from ide.presentation.components.common.panel.panel_content import PanelContent
 from ide.presentation.components.common.panel.panel_toolbar import PanelToolbar
 from PyQt6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QLayout,
     QFrame,
 )
@@ -40,7 +39,7 @@ class PanelView(QFrame, StyledMixin):
 
         self.setObjectName("PanelView")
 
-        layout = create_layout(self)
+        layout = create_vertical_layout(self)
 
         # Добавить тулбар если предоставлен
         if toolbar:

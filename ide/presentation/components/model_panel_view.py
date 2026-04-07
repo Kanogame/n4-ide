@@ -14,7 +14,7 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont, QColor
 
 
-from ide.presentation.common.layouts import create_layout
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.containers import FormField
@@ -55,17 +55,13 @@ class ModelPanelView(QWidget):
     backend_changed = pyqtSignal(str)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
-        """Инициализировать панель модели.
-
-        Args:
-            parent: Родительский виджет.
-        """
+        """Инициализировать панель модели"""
         super().__init__(parent)
 
         self._current_model_info = ModelInfo()
 
         # Основной layout панели
-        layout = create_layout(self)
+        layout = create_vertical_layout(self)
 
         # Создать панель с тулбаром
         toolbar = self.create_toolbar()
