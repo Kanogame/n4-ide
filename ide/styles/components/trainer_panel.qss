@@ -1,0 +1,45 @@
+#TrainerSplitter::handle {
+    background-color: #F0F0F0;
+    width: 10px;
+}
+
+#TrainerSplitter::handle:hover {
+    background-color: #E0E0E0;
+}
+
+#TrainingLogReader {
+    background-color: white;
+}
+
+#TrainingLogReader QTextEdit {
+    background-color: #F8F8F8;
+    color: #333333;
+    border: 1px solid #E0E0E0;
+    border-radius: 4px;
+    padding: 8px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+#TrainingLogReader QPushButton {
+    padding: 5px 12px 7px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+#TrainingLogReader QPushButton[default="true"] {
+    background-color: white;
+    color: rgba(0, 0, 0, 0.90);
+    border: 1px solid black;
+}
+
+#TrainingLogReader QPushButton[default="true"]:hover {
+    background-color: white;
+    border: 1px solid #005FB8;
+}
+
+#TrainingLogReader QPushButton[default="true"]:pressed {
+    background-color: rgba(0, 95, 184, 0.1);
+}

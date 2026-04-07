@@ -83,9 +83,9 @@ class NavBar(QFrame, StyledMixin):
 
         self.add_item(
             NavItem(
-                id="training",
+                id="trainer",
                 icon_path="assets/icons/training.svg",
-                tooltip="Model Training",
+                tooltip="Model Trainer",
             )
         )
 

@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
 
 from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.dataset_panel_view import DatasetPanelView
+from ide.presentation.components.trainer_panel_view import TrainerPanelView
 
 from ide.presentation.common.styled_widget import StyledMainWindow
 
@@ -74,7 +75,8 @@ class MainWindow(StyledMainWindow):
         Включает:
         - ModelPanelView для редактирования модели
         - DatasetPanelView для генерации датасетов
-        - Подключение сигнала генерации датасета
+        - TrainerPanelView для обучения модели
+        - Подключение сигналов генерации датасета и обучения
         """
 
         # Используем QStackedWidget чтобы быстро и легко
@@ -87,12 +89,20 @@ class MainWindow(StyledMainWindow):
         self.dataset = DatasetPanelView()
         self.stacked.addWidget(self.dataset)
 
+        self.trainer = TrainerPanelView()
+        self.stacked.addWidget(self.trainer)
+
         self.content_layout.addWidget(self.stacked)
 
         # Подключить сигнал генерации датасета
         self.dataset.generate_requested.connect(self._on_dataset_generate_requested)
 
-        # Хранилище для текущего рабочего потока (только один может быть активен)
+        # Подключить сигналы обучения
+        self.trainer.training_started.connect(self._on_training_started)
+        self.trainer.training_paused.connect(self._on_training_paused)
+        self.trainer.training_stopped.connect(self._on_training_stopped)
+
+        # Хранилище для текущего рабочего потока датасета
         self.generation_worker: DatasetGenerationWorker | None = None
 
     def _on_navbar_item_clicked(self, item_id: str) -> None:
@@ -108,6 +118,7 @@ class MainWindow(StyledMainWindow):
         item_id_mapping = {
             "code": 0,
             "dataset": 1,
+            "trainer": 2,
         }
 
         # Вызываем смену
@@ -166,3 +177,22 @@ class MainWindow(StyledMainWindow):
             error_message: Текст сообщения об ошибке.
         """
         print(f"Ошибка генерации датасета: {error_message}")
+
+    def _on_training_started(self, config) -> None:
+        """Обработчик сигнала начала обучения.
+
+        Запускает процесс обучения модели с выбранной конфигурацией.
+
+        Args:
+            config: TrainingConfig с параметрами обучения.
+        """
+        self.trainer.append_log("Обучение начато")
+
+    def _on_training_paused(self) -> None:
+        """Обработчик сигнала паузы обучения."""
+        self.trainer.append_log("Обучение поставлено на паузу")
+
+    def _on_training_stopped(self) -> None:
+        """Обработчик сигнала остановки обучения."""
+        self.trainer.append_log("Обучение остановлено пользователем")
+        self.trainer.set_training_enabled(True)
