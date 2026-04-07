@@ -1,4 +1,4 @@
-SpinBox {
+DoubleSpinBox {
     padding: 4px 11px;
     background-color: #fff;
     border-radius: 6px;
@@ -10,18 +10,17 @@ SpinBox {
     font-size: 14px;
 }
 
-SpinBox:hover {
+DoubleSpinBox:hover {
     border-bottom: 1px solid #005FB8;
 }
 
-SpinBox:focus {
+DoubleSpinBox:focus {
     border-bottom: 1px solid #005FB8;
 }
 
-SpinBox::up-button, SpinBox::down-button {
+DoubleSpinBox::up-button, DoubleSpinBox::down-button {
     border: none;
 }
-
-SpinBox::up-button:hover, SpinBox::down-button:hover {
+DoubleSpinBox::up-button:hover, DoubleSpinBox::down-button:hover {
     background-color: #EAEAEA;
 }
