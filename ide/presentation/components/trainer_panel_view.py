@@ -1,12 +1,11 @@
+from ide.presentation.components.common.splitter import HorizontalSplitter
 from typing import Optional, Self
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QSplitter,
     QHBoxLayout,
-    QSizePolicy,
 )
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal
 
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.panel_view import PanelView
@@ -54,19 +53,8 @@ class TrainerPanelView(QWidget):
         # Основной layout панели
         layout = create_vertical_layout(self)
 
-        # Создать главную панель с тулбаром
+        # Создать главную панель
         self.main_content = PanelView("Обучение модели")
-
-        # Сплиттер для разделения конфигурации и логов
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setObjectName("TrainerSplitter")
-        splitter.setHandleWidth(10)
-
-        # Добавляем растягивание
-        splitter.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.main_content.add_widget(splitter)
 
         # Левая часть - конфигурация обучения
         self.create_config_widget()
@@ -74,11 +62,9 @@ class TrainerPanelView(QWidget):
         # Правая часть - логи обучения
         self.create_log_widget()
 
-        splitter.addWidget(self.left_widget)
-        splitter.addWidget(self.log_reader)
-
-        # Установить соотношение размеров
-        splitter.setSizes([1, 1])
+        # Сплиттер для разделения конфигурации и логов
+        splitter = HorizontalSplitter(self.left_widget, self.log_reader)
+        self.main_content.add_widget(splitter)
 
         # Создать кнопки управления
         self.create_control_buttons()

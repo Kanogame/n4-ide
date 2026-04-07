@@ -1,3 +1,4 @@
+from ide.presentation.components.common.splitter import HorizontalSplitter
 from typing import Optional, Self, Any
 from dataclasses import dataclass
 
@@ -5,11 +6,9 @@ from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QScrollArea,
-    QSplitter,
     QLineEdit,
-    QSizePolicy,
 )
-from PyQt6.QtCore import pyqtSignal, Qt
+from PyQt6.QtCore import pyqtSignal
 
 from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
 from ide.domain.datasets import FieldType
@@ -70,31 +69,18 @@ class DatasetPanelView(QWidget, StyledMixin):
         # Создать форму - селектор датасета
         self.create_dataset_selector()
 
-        # Сплиттер для разделения конфигурации и визуализации
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setObjectName("DatasetSplitter")
-        splitter.setHandleWidth(10)
-
-        # Добавляем растягивание (аналогично flex: 1)
-        splitter.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.main_content.add_widget(splitter)
-
         # Создать контейнер для динамических полей параметров
         self.create_parameters_container()
 
         # Создать кнопку генерации
         self.create_buttons()
 
-        splitter.addWidget(self.left_widget)
-
         # Правая часть - визуализация датасета
         self.visualizer = DatasetVisualizerWidget()
-        splitter.addWidget(self.visualizer)
 
-        # Установить соотношение размеров
-        splitter.setSizes([1, 1])
+        # Сплиттер для разделения конфигурации и визуализации
+        splitter = HorizontalSplitter(self.left_widget, self.visualizer)
+        self.main_content.add_widget(splitter)
 
         layout.addWidget(self.main_content)
 

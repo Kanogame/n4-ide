@@ -1,0 +1,15 @@
+HorizontalSplitter {
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    background-color: #fff;
+    height: 100%;
+}
+
+HorizontalSplitter::handle {
+    background: #EAEAEA;
+}
+
+HorizontalSplitter::handle:horizontal {
+    width: 10px;
+    margin: 0 2px;
+}
