@@ -20,7 +20,7 @@ from PyQt6.QtCore import pyqtSignal, Qt
 
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
-from ide.presentation.components.spinbox import SpinBox
+from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.containers import FormField
 
 
@@ -219,6 +219,8 @@ class DatasetPanelView(QWidget):
         Returns:
             QWidget для редактирования значения параметра.
         """
+
+        # TODO: WTF
         from ide.domain.datasets import FieldType
         from ide.presentation.components.double_spinbox import DoubleSpinBox
 

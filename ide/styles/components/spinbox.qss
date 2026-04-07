@@ -1,0 +1,28 @@
+SpinBox {
+    padding: 4px 8+11px;
+    background-color: #fff;
+    border-radius: 6px;
+    border: 1px solid #EAEAEA;
+    border-bottom: 1px solid #D6D6D6;
+    color: rgba(0, 0, 0, 0.90);
+
+    font-family: "Open Sans";
+    font-size: 14px;
+}
+
+SpinBox:hover {
+    border-bottom: 1px solid #005FB8;
+}
+
+SpinBox:focus {
+    border-bottom: 1px solid #005FB8;
+}
+
+SpinBox::up-button, SpinBox::down-button {
+    border: none;
+    # TODO: fix buttons
+}
+
+SpinBox::up-button:hover, SpinBox::down-button:hover {
+    background-color: #EAEAEA;
+}
