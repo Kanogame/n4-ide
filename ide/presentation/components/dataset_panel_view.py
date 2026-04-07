@@ -1,23 +1,24 @@
-"""Панель управления генерацией датасета.
-
-Компонент позволяет выбрать тип датасета, настроить его параметры
-и просмотреть сгенерированные данные с помощью matplotlib.
-"""
-
-from ide.presentation.components.common.panel_view import PanelView, PanelToolbar
-from ide.presentation.components.dataset_visualizer import DatasetVisualizerWidget
-from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
 from typing import Optional, Self, Any
 from dataclasses import dataclass
+
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QScrollArea,
     QSplitter,
+    QLineEdit,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 
+from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
+from ide.domain.datasets import FieldType
+
+from ide.presentation.common.styled_widget import StyledMixin
+from ide.presentation.common.layouts import create_layout
+from ide.presentation.components.common.panel_view import PanelView
+from ide.presentation.components.dataset_visualizer import DatasetVisualizerWidget
+from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.spinbox import SpinBox
@@ -37,7 +38,7 @@ class DatasetConfig:
     parameters: dict[str, Any]
 
 
-class DatasetPanelView(QWidget):
+class DatasetPanelView(QWidget, StyledMixin):
     """Панель для управления синтетическими датасетами.
 
     Компонент включает:
@@ -60,27 +61,21 @@ class DatasetPanelView(QWidget):
             parent: Родительский виджет.
         """
         super().__init__(parent)
+        self._apply_style("dataset_panel_view.qss")
 
         # Основной layout панели
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = create_layout(self)
+
+        # Создать панель
+        self.main_content = PanelView("Выбор датасета")
+
+        # Создать форму - селектор датасета
+        self.create_dataset_selector()
 
         # Сплиттер для разделения конфигурации и визуализации
         splitter = QSplitter(Qt.Orientation.Horizontal)
-
-        # Левая часть - конфигурация датасета
-        left_widget = QWidget()
-        left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(0)
-
-        # Создать панель с тулбаром
-        toolbar = self.create_toolbar()
-        self.main_content = PanelView("Выбор датасета", toolbar)
-
-        # Создать селектор датасета
-        self.create_dataset_selector()
+        splitter.setObjectName("DatasetSplitter")
+        self.main_content.add_widget(splitter)
 
         # Создать контейнер для динамических полей параметров
         self.create_parameters_container()
@@ -88,29 +83,20 @@ class DatasetPanelView(QWidget):
         # Создать кнопку генерации
         self.create_buttons()
 
-        left_layout.addWidget(self.main_content)
-        splitter.addWidget(left_widget)
+        splitter.addWidget(self.left_widget)
 
         # Правая часть - визуализация датасета
         self.visualizer = DatasetVisualizerWidget()
         splitter.addWidget(self.visualizer)
 
         # Установить соотношение размеров (40/60)
-        splitter.setStretchFactor(0, 40)
-        splitter.setStretchFactor(1, 60)
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 3)
 
-        layout.addWidget(splitter)
+        layout.addWidget(self.main_content)
 
         # Инициализировать поля параметров для первого датасета
         self._update_parameters_fields()
-
-    def create_toolbar(self: Self) -> PanelToolbar:
-        """Создать тулбар панели.
-
-        Returns:
-            Экземпляр PanelToolbar.
-        """
-        return PanelToolbar()
 
     def create_dataset_selector(self: Self) -> None:
         """Создать выпадающий список выбора датасета.
@@ -131,19 +117,26 @@ class DatasetPanelView(QWidget):
         Контейнер содержит поля параметров, которые меняются
         в зависимости от выбранного датасета.
         """
+
+        # Левая панель сплиттера
+        self.left_widget = QWidget()
+        self.left_layout = QVBoxLayout(self.left_widget)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_layout.setSpacing(0)
+
         # Скроллируемая область для параметров
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("QScrollArea { border: none; }")
+        scroll.setObjectName("DatasetScroll")
 
         # Виджет-контейнер для полей параметров
         self.params_container = QWidget()
-        self.params_layout = QVBoxLayout(self.params_container)
-        self.params_layout.setContentsMargins(0, 0, 0, 0)
-        self.params_layout.setSpacing(12)
+        self.params_layout = create_layout(self.params_container, 12)
+        self.params_layout.setObjectName("DatasetParamsLayout")
+        self.params_container.setObjectName("DatasetParams")
 
         scroll.setWidget(self.params_container)
-        self.main_content.add_widget(scroll)
+        self.left_layout.addWidget(scroll)
 
         # Словарь для хранения ссылок на widgets параметров
         self.parameter_widgets: dict[str, QWidget] = {}
@@ -161,7 +154,7 @@ class DatasetPanelView(QWidget):
         self.generate_button.clicked.connect(self._on_generate_clicked)
 
         buttons_layout.addWidget(self.generate_button)
-        self.main_content.add_layout(buttons_layout)
+        self.left_layout.addLayout(buttons_layout)
 
     def _on_dataset_changed(self, dataset_name: str) -> None:
         """Обработчик изменения выбранного датасета.
@@ -220,23 +213,14 @@ class DatasetPanelView(QWidget):
             QWidget для редактирования значения параметра.
         """
 
-        # TODO: WTF
-        from ide.domain.datasets import FieldType
-        from ide.presentation.components.double_spinbox import DoubleSpinBox
-
         if field.field_type == FieldType.INTEGER:
-            spinbox = SpinBox()
-            spinbox.setMinimum(int(field.min_value or 0))
-            spinbox.setMaximum(int(field.max_value or 100))
+            spinbox = SpinBox(field.min_value, field.max_value)
             spinbox.setValue(int(field.default_value))
             return spinbox
 
         elif field.field_type == FieldType.FLOAT:
-            doublespinbox = DoubleSpinBox()
-            doublespinbox.setMinimum(float(field.min_value or 0.0))
-            doublespinbox.setMaximum(float(field.max_value or 1.0))
+            doublespinbox = DoubleSpinBox(field.min_value, field.max_value, 0.01)
             doublespinbox.setValue(float(field.default_value))
-            doublespinbox.setSingleStep(0.01)
             return doublespinbox
 
         elif field.field_type == FieldType.CHOICE:
@@ -245,9 +229,7 @@ class DatasetPanelView(QWidget):
                 combobox.addItems(field.choices)
             return combobox
 
-        else:  # FieldType.TEXT
-            from PyQt6.QtWidgets import QLineEdit
-
+        else:
             lineedit = QLineEdit()
             lineedit.setText(str(field.default_value))
             return lineedit
@@ -270,7 +252,6 @@ class DatasetPanelView(QWidget):
                 widget = self.parameter_widgets.get(field.name)
                 if widget:
                     # Получить значение из виджета в зависимости от типа
-                    from ide.domain.datasets import FieldType
 
                     if field.field_type == FieldType.INTEGER:
                         # SpinBox имеет value()

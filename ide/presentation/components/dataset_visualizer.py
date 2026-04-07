@@ -1,6 +1,7 @@
 from typing import Optional, Any
-from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QWidget
 
+from ide.presentation.common.layouts import create_layout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
@@ -26,9 +27,7 @@ class DatasetVisualizerWidget(QWidget):
         """
         super().__init__(parent)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = create_layout(self)
 
         # Создать matplotlib фигуру
         self.figure = Figure(figsize=(8, 6), dpi=100)

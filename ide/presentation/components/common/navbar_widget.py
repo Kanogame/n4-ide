@@ -2,6 +2,8 @@ from typing import Optional
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QFrame
 from PyQt6.QtCore import pyqtSignal
 
+
+from ide.presentation.common.layouts import create_layout
 from ide.presentation.common.styled_widget import StyledMixin
 from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
@@ -38,9 +40,7 @@ class NavBar(QFrame, StyledMixin):
         self._items: dict[str, NavBarButton] = {}
         self._nav_items: dict[str, NavItem] = {}
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = create_layout(self)
 
         # Основная панель для элементов сверху
         self._main_layout = QVBoxLayout()

@@ -1,3 +1,4 @@
+from ide.presentation.common.layouts import create_layout
 from ide.presentation.common.styled_widget import StyledMixin
 from ide.presentation.components.common.panel.panel_content import PanelContent
 from ide.presentation.components.common.panel.panel_toolbar import PanelToolbar
@@ -39,9 +40,7 @@ class PanelView(QFrame, StyledMixin):
 
         self.setObjectName("PanelView")
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = create_layout(self)
 
         # Добавить тулбар если предоставлен
         if toolbar:

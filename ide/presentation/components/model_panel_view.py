@@ -8,12 +8,13 @@ from typing import Optional, Self
 from dataclasses import dataclass
 from PyQt6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QHBoxLayout,
 )
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QFont, QColor
 
+
+from ide.presentation.common.layouts import create_layout
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.containers import FormField
@@ -64,9 +65,7 @@ class ModelPanelView(QWidget):
         self._current_model_info = ModelInfo()
 
         # Основной layout панели
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout = create_layout(self)
 
         # Создать панель с тулбаром
         toolbar = self.create_toolbar()

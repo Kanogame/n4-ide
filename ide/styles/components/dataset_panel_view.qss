@@ -1,0 +1,17 @@
+#DatasetSplitter {
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    }
+
+#DatasetScroll {
+    border: none;
+}
+
+#DatasetParams {
+    background-color: #fff;
+}
+
+#DatasetParamsLayout {
+    border: 20px solid red;
+    padding 10px;
+}
