@@ -23,7 +23,7 @@ from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.spinbox import SpinBox
-from ide.presentation.components.containers import FormField
+from ide.presentation.components.common.form_field import FormField
 
 
 @dataclass(frozen=True)
