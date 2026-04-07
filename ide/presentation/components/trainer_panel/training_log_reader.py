@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Self
 
 from PyQt6.QtWidgets import (
     QWidget,
@@ -12,7 +12,7 @@ from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtGui import QFont, QTextCursor
 
 
-class QtLogHandler(logging.Handler, QObject):
+class QtLogHandler(QObject, logging.Handler):
     """Обработчик логирования для передачи сообщений в Qt сигналы.
 
     Позволяет направлять вывод логгера в Qt интерфейс без
@@ -21,6 +21,9 @@ class QtLogHandler(logging.Handler, QObject):
 
     # Сигнал при получении нового лога.
     log_emitted = pyqtSignal(str)
+
+    def __init__(self: Self) -> None:
+        super().__init__()
 
     def emit(self, record: logging.LogRecord) -> None:
         """Вызывается логгером при появлении нового сообщения.

@@ -1,6 +1,9 @@
 from ide.presentation.components.common.navbar_widget import NavBar
 from ide.domain.datasets.controller import DatasetGenerationWorker
-from typing import Self
+from ide.domain.execution.controller import ExecutionController
+from ide.domain.execution.training_controller import TrainingController
+from ide.application.app import Application
+from typing import Self, Optional, Any
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -16,24 +19,37 @@ from ide.presentation.common.mixins import StyledMainWindow
 
 
 class MainWindow(StyledMainWindow):
-    """
-    Главное окно приложение, содержит navbar слева, а также главную панель
+    """Главное окно приложение, содержит navbar слева, а также главную панель.
 
-    Все компоненты коммуницируют через сигналы
+    Все компоненты коммуницируют через сигналы. Управляет
+    выполнением кода модели, генерацией датасетов и обучением.
     """
 
     def __init__(self) -> None:
-        super().__init__(
-            None,
-        )
+        super().__init__(None)
 
         self.setWindowTitle("N4 IDE")
         self.resize(1600, 900)
 
+        # Инициализировать Application слой
+        self.app = Application()
+
+        # Инициализировать контроллеры
+        self.execution_controller = ExecutionController(
+            output_callback=self.app.append_output
+        )
+        self.training_controller = TrainingController()
+
+        # Текущие ссылки на данные
+        self.current_dataset_x: Optional[Any] = None
+        self.current_dataset_y: Optional[Any] = None
+        self.current_model_class: Optional[type] = None
+        self.generation_worker: Optional[DatasetGenerationWorker] = None
+
         self._build_ui()
 
     def _build_ui(self) -> None:
-        """Собрать главный интерфейс"""
+        """Собрать главный интерфейс."""
 
         main_widget = QWidget()
         self.main_layout = QHBoxLayout(main_widget)
@@ -53,6 +69,7 @@ class MainWindow(StyledMainWindow):
         self.setCentralWidget(main_widget)
 
     def setup_nabar(self: Self) -> None:
+        """Настроить навигационную панель."""
         self.navbar = NavBar()
 
         # Подключаем сигнал в _on_navbar_item_clicked
@@ -63,6 +80,7 @@ class MainWindow(StyledMainWindow):
         self.main_layout.addWidget(self.navbar)
 
     def setup_panel_view(self: Self) -> None:
+        """Настроить основной layout для панелей."""
         self.content_layout = QVBoxLayout()
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)
@@ -76,11 +94,10 @@ class MainWindow(StyledMainWindow):
         - ModelPanelView для редактирования модели
         - DatasetPanelView для генерации датасетов
         - TrainerPanelView для обучения модели
-        - Подключение сигналов генерации датасета и обучения
+        - Подключение сигналов для взаимодействия компонентов
         """
 
-        # Используем QStackedWidget чтобы быстро и легко
-        # менять разделы через setCurrentIndex
+        # Используем QStackedWidget чтобы быстро менять разделы
         self.stacked = QStackedWidget()
 
         self.model_view = ModelPanelView()
@@ -94,6 +111,12 @@ class MainWindow(StyledMainWindow):
 
         self.content_layout.addWidget(self.stacked)
 
+        # Подключить сигналы модели
+        self.model_view.train_requested.connect(self._on_model_code_run)
+        self.model_view.backend_changed.connect(
+            lambda backend: self.app.set_backend(backend)
+        )
+
         # Подключить сигнал генерации датасета
         self.dataset.generate_requested.connect(self._on_dataset_generate_requested)
 
@@ -102,8 +125,8 @@ class MainWindow(StyledMainWindow):
         self.trainer.training_paused.connect(self._on_training_paused)
         self.trainer.training_stopped.connect(self._on_training_stopped)
 
-        # Хранилище для текущего рабочего потока датасета
-        self.generation_worker: DatasetGenerationWorker | None = None
+        # Подключить сигналы приложения к UI
+        self.app.output_received.connect(self.trainer.append_log)
 
     def _on_navbar_item_clicked(self, item_id: str) -> None:
         """Обработчик сигнала кнопки navbar.
@@ -114,24 +137,53 @@ class MainWindow(StyledMainWindow):
             item_id: Идентификатор выбранного пункта в навигации.
         """
 
-        # Мапим названия панелей к их id в stacked виджете
+        # Маппинг названия панелей к их индексам в stacked виджете
         item_id_mapping = {
             "code": 0,
             "dataset": 1,
             "trainer": 2,
         }
 
-        # Вызываем смену
+        # Вызываем смену раздела
         self.stacked.setCurrentIndex(item_id_mapping[item_id])
 
-    def _on_dataset_generate_requested(
-        self,
-        config,
-    ) -> None:
+    def _on_model_code_run(self) -> None:
+        """Обработчик сигнала запуска кода модели.
+
+        Выполняет код из редактора модели, извлекает класс модели
+        и обновляет состояние приложения.
+        """
+        try:
+            # Получить код модели из редактора
+            model_code = self.model_view.get_model_code()
+            backend_name = self.model_view.get_selected_backend()
+
+            # Выполнить код с backend
+            namespace = self.execution_controller.run(model_code, backend_name)
+
+            # Извлечь класс модели
+            model_class = self.execution_controller.extract_and_validate_model(
+                namespace
+            )
+
+            # Сохранить класс модели
+            self.current_model_class = model_class
+
+            # Обновить состояние приложения
+            self.app.set_backend(backend_name)
+
+            # Вывести успешное сообщение
+            self.app.append_output(f"✓ Модель {model_class.__name__} загружена успешно")
+
+        except Exception as e:
+            self.app.append_output(f"✗ Ошибка при загрузке модели: {e}")
+            self.app.error_occurred.emit(str(e))
+
+    def _on_dataset_generate_requested(self, config) -> None:
         """Обработчик сигнала генерации датасета.
 
         Запускает рабочий поток для генерации датасета в фоне
-        и подключает сигналы для обновления UI.
+        и подключает сигналы для обновления UI и состояния.
 
         Args:
             config: DatasetConfig с именем датасета и параметрами.
@@ -157,42 +209,133 @@ class MainWindow(StyledMainWindow):
     def _on_dataset_generated(self, dataset_result) -> None:
         """Обработчик успешной генерации датасета.
 
-        Отображает сгенерированный датасет в визуализаторе.
+        Отображает сгенерированный датасет в визуализаторе
+        и сохраняет данные для последующего обучения.
 
         Args:
             dataset_result: DatasetResult с массивами X и y.
         """
+        # Отобразить датасет в визуализаторе
         self.dataset.visualizer.set_dataset(
             dataset_result.X,
             dataset_result.y,
             title=dataset_result.title,
         )
 
+        # Сохранить данные в состояние приложения
+        self.current_dataset_x = dataset_result.X
+        self.current_dataset_y = dataset_result.y
+
+        # Обновить состояние приложения
+        self.app.set_dataset(
+            name=dataset_result.title or "Dataset",
+            x=dataset_result.X,
+            y=dataset_result.y,
+            title=dataset_result.title or "Generated Dataset",
+        )
+
+        # Логировать успех
+        self.app.append_output(
+            f"✓ Датасет '{dataset_result.title}' сгенерирован успешно"
+        )
+
     def _on_dataset_generation_error(self, error_message: str) -> None:
         """Обработчик ошибки при генерации датасета.
 
-        Выводит сообщение об ошибке в консоль.
+        Выводит сообщение об ошибке в логи приложения.
 
         Args:
             error_message: Текст сообщения об ошибке.
         """
-        print(f"Ошибка генерации датасета: {error_message}")
+        self.app.append_output(f"✗ Ошибка генерации датасета: {error_message}")
+        self.app.error_occurred.emit(error_message)
 
     def _on_training_started(self, config) -> None:
         """Обработчик сигнала начала обучения.
 
-        Запускает процесс обучения модели с выбранной конфигурацией.
+        Проверяет наличие модели и датасета, затем запускает
+        процесс обучения в отдельном потоке.
 
         Args:
             config: TrainingConfig с параметрами обучения.
         """
-        self.trainer.append_log("Обучение начато")
+        # Проверить наличие модели
+        if self.current_model_class is None:
+            self.app.append_output(
+                "✗ Ошибка: сначала нужно загрузить модель (раздел 'Модель')"
+            )
+            self.trainer.set_training_enabled(True)
+            return
+
+        # Проверить наличие датасета
+        if self.current_dataset_x is None or self.current_dataset_y is None:
+            self.app.append_output(
+                "✗ Ошибка: сначала нужно сгенерировать датасет (раздел 'Датасет')"
+            )
+            self.trainer.set_training_enabled(True)
+            return
+
+        # Логировать начало обучения
+        self.app.append_output("Обучение начато...")
+        self.trainer.clear_logs()
+        self.trainer.append_log("=" * 50)
+        self.trainer.append_log(f"Модель: {self.current_model_class.__name__}")
+        self.trainer.append_log("Параметры обучения:")
+        self.trainer.append_log(f"  Эпохи: {config.epochs}")
+        self.trainer.append_log(f"  Батч: {config.batch_size}")
+        self.trainer.append_log(f"  Скорость обучения: {config.learning_rate}")
+        self.trainer.append_log("=" * 50)
+
+        # Запустить обучение
+        self.training_controller.start_training(
+            model_class=self.current_model_class,
+            dataset_x=self.current_dataset_x,
+            dataset_y=self.current_dataset_y,
+            config=config,
+            on_progress=self.trainer.append_log,
+            on_finished=self._on_training_finished,
+            on_error=self._on_training_error,
+        )
+
+        # Отключить кнопку старта
+        self.trainer.set_training_enabled(False)
+
+    def _on_training_finished(self, result) -> None:
+        """Обработчик завершения обучения.
+
+        Args:
+            result: TrainingResult с результатами обучения.
+        """
+        if result.success:
+            self.app.append_output(
+                f"✓ Обучение завершено за {result.duration_seconds:.2f} сек"
+            )
+            if result.final_metrics:
+                for key, value in result.final_metrics.items():
+                    self.app.append_output(f"  {key}: {value:.6f}")
+        else:
+            self.app.append_output(f"✗ Ошибка обучения: {result.error_message}")
+            self.app.error_occurred.emit(result.error_message or "Unknown error")
+
+        # Включить кнопку старта
+        self.trainer.set_training_enabled(True)
 
     def _on_training_paused(self) -> None:
         """Обработчик сигнала паузы обучения."""
+        self.training_controller.pause_current()
         self.trainer.append_log("Обучение поставлено на паузу")
 
     def _on_training_stopped(self) -> None:
         """Обработчик сигнала остановки обучения."""
+        self.training_controller.stop_current()
         self.trainer.append_log("Обучение остановлено пользователем")
+        self.trainer.set_training_enabled(True)
+
+    def _on_training_error(self, error_message: str) -> None:
+        """Обработчик ошибки во время обучения.
+
+        Args:
+            error_message: Сообщение об ошибке.
+        """
+        self.app.append_output(f"✗ Ошибка: {error_message}")
         self.trainer.set_training_enabled(True)

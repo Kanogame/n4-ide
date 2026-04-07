@@ -14,9 +14,44 @@ class ExecutionResult:
     variables: dict[str, Any] = field(default_factory=dict)
 
 
-class Application(QObject):
+@dataclass(frozen=True)
+class TrainingState:
+    """Неизменяемое состояние обучения модели.
+
+    Attributes:
+        model_class: Класс модели для обучения.
+        model_instance: Экземпляр модели (если создана).
+        dataset_x: Входные данные датасета (ndarray или Tensor).
+        dataset_y: Целевые данные датасета (ndarray или Tensor).
+        backend: Выбранный вычислительный backend (PyFloat, NumPy, PyTorch).
     """
-    Центральное приложение, управляющее состоянием IDE.
+
+    model_class: Optional[type] = None
+    model_instance: Optional[Any] = None
+    dataset_x: Optional[Any] = None
+    dataset_y: Optional[Any] = None
+    backend: str = "PyFloat"
+
+
+@dataclass(frozen=True)
+class DatasetState:
+    """Неизменяемое состояние датасета.
+
+    Attributes:
+        name: Имя датасета.
+        x: Входные данные.
+        y: Целевые данные.
+        title: Название для отображения.
+    """
+
+    name: str
+    x: Any
+    y: Any
+    title: str = ""
+
+
+class Application(QObject):
+    """Центральное приложение, управляющее состоянием IDE.
 
     Служит связующим звеном между UI (presentation layer) и бизнес-логикой (domain layer).
     Следует принципам Signal-Driven Architecture.
@@ -28,16 +63,20 @@ class Application(QObject):
     output_received = pyqtSignal(str)  # Получен новый вывод
     model_loaded = pyqtSignal(object)  # Модель загружена и готова
     error_occurred = pyqtSignal(str)  # Произошла ошибка
+    dataset_loaded = pyqtSignal(DatasetState)  # Датасет загружен
+    training_state_changed = pyqtSignal(TrainingState)  # Состояние обучения изменилось
 
     def __init__(self) -> None:
         super().__init__()
         self._model: Optional[object] = None
         self._execution_namespace: dict[str, Any] = {}
         self._output_buffer: list[str] = []
+        self._training_state = TrainingState()
+        self._dataset_state: Optional[DatasetState] = None
+        self._selected_backend: str = "PyFloat"
 
     def set_model(self, model: object) -> None:
-        """
-        Установить текущую модель и извлечь из неё информацию.
+        """Установить текущую модель и извлечь из неё информацию.
 
         Args:
             model: Объект модели из namespace выполнения
@@ -46,8 +85,7 @@ class Application(QObject):
         self.model_loaded.emit(model)
 
     def append_output(self, text: str) -> None:
-        """
-        Добавить текст в буфер вывода.
+        """Добавить текст в буфер вывода.
 
         Args:
             text: Текст для добавления
@@ -70,6 +108,47 @@ class Application(QObject):
     def set_execution_namespace(self, namespace: dict[str, Any]) -> None:
         """Установить namespace после выполнения кода."""
         self._execution_namespace = namespace.copy()
+
+    def set_dataset(self, name: str, x: Any, y: Any, title: str = "") -> None:
+        """Установить текущий датасет.
+
+        Args:
+            name: Имя датасета.
+            x: Входные данные.
+            y: Целевые данные.
+            title: Название для отображения.
+        """
+        self._dataset_state = DatasetState(name=name, x=x, y=y, title=title)
+        self.dataset_loaded.emit(self._dataset_state)
+
+    def get_dataset_state(self) -> Optional[DatasetState]:
+        """Получить текущее состояние датасета."""
+        return self._dataset_state
+
+    def set_backend(self, backend: str) -> None:
+        """Установить вычислительный backend.
+
+        Args:
+            backend: Название backend (PyFloat, NumPy, PyTorch).
+        """
+        self._selected_backend = backend
+
+    def get_backend(self) -> str:
+        """Получить выбранный backend."""
+        return self._selected_backend
+
+    def set_training_state(self, state: TrainingState) -> None:
+        """Установить состояние обучения.
+
+        Args:
+            state: TrainingState с информацией об обучении.
+        """
+        self._training_state = state
+        self.training_state_changed.emit(state)
+
+    def get_training_state(self) -> TrainingState:
+        """Получить текущее состояние обучения."""
+        return self._training_state
 
     # Placeholder методы для расширения функциональности
     def save_state(self) -> None:

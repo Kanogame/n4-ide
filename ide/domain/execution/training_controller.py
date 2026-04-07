@@ -35,23 +35,26 @@ class TrainingWorkerThread(QThread):
 
     def __init__(
         self,
-        model: Any,
-        dataset: Any,
+        model_class: type,
+        dataset_x: Any,
+        dataset_y: Any,
         config: TrainingConfig,
         parent: Optional[QObject] = None,
     ) -> None:
         """Инициализировать рабочий поток обучения.
 
         Args:
-            model: Модель для обучения.
-            dataset: Датасет для обучения.
+            model_class: Класс модели для обучения (подкласс n4.nn.Model).
+            dataset_x: Входные данные датасета.
+            dataset_y: Целевые данные датасета.
             config: Конфигурация обучения.
             parent: Родительский объект Qt.
         """
         super().__init__(parent)
 
-        self.model = model
-        self.dataset = dataset
+        self.model_class = model_class
+        self.dataset_x = dataset_x
+        self.dataset_y = dataset_y
         self.config = config
 
         self.executor = TrainingExecutor()
@@ -73,8 +76,9 @@ class TrainingWorkerThread(QThread):
         """Выполнить обучение в рабочем потоке."""
         try:
             result = self.executor.execute_training(
-                self.model,
-                self.dataset,
+                self.model_class,
+                self.dataset_x,
+                self.dataset_y,
                 self.config,
             )
             self.finished.emit(result)
@@ -108,8 +112,9 @@ class TrainingController:
 
     def start_training(
         self,
-        model: Any,
-        dataset: Any,
+        model_class: type,
+        dataset_x: Any,
+        dataset_y: Any,
         config: TrainingConfig,
         on_progress: Callable[[str], None],
         on_finished: Callable[[TrainingResult], None],
@@ -118,8 +123,9 @@ class TrainingController:
         """Запустить процесс обучения в отдельном потоке.
 
         Args:
-            model: Модель для обучения.
-            dataset: Датасет для обучения.
+            model_class: Класс модели для обучения (подкласс n4.nn.Model).
+            dataset_x: Входные данные датасета.
+            dataset_y: Целевые данные датасета.
             config: Конфигурация обучения.
             on_progress: Callback при получении нового лога.
             on_finished: Callback при завершении обучения.
@@ -133,8 +139,9 @@ class TrainingController:
 
         # Создать новый рабочий поток
         self.current_training_thread = TrainingWorkerThread(
-            model,
-            dataset,
+            model_class,
+            dataset_x,
+            dataset_y,
             config,
         )
 

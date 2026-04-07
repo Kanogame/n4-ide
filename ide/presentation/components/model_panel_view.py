@@ -146,6 +146,14 @@ class ModelPanelView(QWidget):
 
         self.main_content.add_layout(buttons_layout)
 
+    def get_model_code(self) -> str:
+        """Получить исходный код модели из редактора.
+
+        Returns:
+            Текст кода модели.
+        """
+        return self.editor.text()
+
     def set_model_info(self, info: ModelInfo) -> None:
         """Update model view with new information.
 
@@ -185,26 +193,18 @@ class ModelPanelView(QWidget):
         Returns:
             Строка с кодом шаблона класса модели.
         """
-        return """from typing import TypeVar
-from n4.nn import Model
-from n4 import Value
+        return """
+class MyModel(Model[PyFloat]):
+    def __init__(self) -> None:
+        self.backend = PyFloat
+        self.model = Sequential(
+            DenseLayer(5, 10, self.backend, Relu[PyFloat]),
+            DenseLayer(10, 3, self.backend, NonOp),
+            SoftmaxLayer(self.backend),
+        )
 
-T = TypeVar("T")
-
-
-class MyModel(Model[T]):
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x: Value):
-
-        w = Value(2.0)
-        b = Value(1.0)
-
-        y = w * x + b
-
-        return y
+    def forward_pass(self, x: Tensor[PyFloat]) -> Tensor[PyFloat]:
+        return self.forward_pass(x)
 """
 
     def _check_syntax(self) -> bool:

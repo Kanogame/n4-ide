@@ -27,12 +27,12 @@ class ExecutionController:
         self._old_stdout: Optional[Any] = None
         self._old_stderr: Optional[Any] = None
 
-    def run(self, code: str) -> dict[str, Any]:
-        """
-        Выполнить код с перенаправлением вывода.
+    def run(self, code: str, backend_name: str = "PyFloat") -> dict[str, Any]:
+        """Выполнить код с перенаправлением вывода.
 
         Args:
             code: Python код для выполнения
+            backend_name: Название вычислительного backend
 
         Returns:
             Namespace (словарь переменных) из выполненного кода
@@ -51,7 +51,7 @@ class ExecutionController:
         sys.stderr = stderr
 
         try:
-            env = self.executor.execute(code)
+            env = self.executor.execute(code, backend_name=backend_name)
             return env
 
         except Exception as e:
