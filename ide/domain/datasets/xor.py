@@ -37,7 +37,7 @@ class XORDataset(Dataset):
         return [
             DatasetField(
                 name="samples_per_class",
-                label="Samples per class",
+                label="Количество точек на класс",
                 field_type=FieldType.INTEGER,
                 default_value=100,
                 min_value=1,
@@ -45,7 +45,7 @@ class XORDataset(Dataset):
             ),
             DatasetField(
                 name="noise",
-                label="Noise std",
+                label="Стандартное отклонение",
                 field_type=FieldType.FLOAT,
                 default_value=0.1,
                 min_value=0.0,

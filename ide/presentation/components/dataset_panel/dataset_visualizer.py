@@ -78,7 +78,7 @@ class DatasetVisualizerWidget(QWidget):
         unique_classes = np.unique(y_arr)
 
         # Цвета для классов
-        colors = ["#0066CC", "#FF6B6B", "#51CF66", "#FFD93D", "#A78BFA"]
+        colors = ["#005FB8", "#DE2FDE", "#51CF66", "#FFD93D", "#A78BFA"]
 
         # Нарисовать каждый класс отдельно
         for i, class_label in enumerate(unique_classes):

@@ -73,6 +73,7 @@ class DatasetPanelView(QWidget, StyledMixin):
         # Сплиттер для разделения конфигурации и визуализации
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.setObjectName("DatasetSplitter")
+        splitter.setHandleWidth(10)
 
         # Добавляем растягивание (аналогично flex: 1)
         splitter.setSizePolicy(

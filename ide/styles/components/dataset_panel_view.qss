@@ -5,10 +5,19 @@
     height: 100%;
 }
 
+#DatasetSplitter::handle {
+    background: #EAEAEA;
+}
+
+#DatasetSplitter::handle:horizontal {
+    width: 10px;
+    margin: 0 2px;
+}
+
 #DatasetScroll {
     border: none;
     padding: 10px;
-    background-color: #fff;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 #DatasetParams {
