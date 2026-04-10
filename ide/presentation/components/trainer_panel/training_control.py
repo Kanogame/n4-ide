@@ -1,37 +1,17 @@
 from typing import Optional
-from dataclasses import dataclass, field
 
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import pyqtSignal
+
+from ide.domain.optimizer import OPTIMIZER_REGISTRY
+from ide.domain.loss import PUBLIC_LOSS_MAPPING
+from ide.domain.training.models import TrainingConfig
 
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.form_field import FormField
-
-
-@dataclass(frozen=True)
-class TrainingConfig:
-    """Неизменяемая конфигурация параметров обучения.
-
-    Attributes:
-        task_type: Тип задачи обучения (классификация, регрессия и т.д.).
-        epochs: Количество эпох обучения.
-        batch_size: Размер батча для обучения.
-        learning_rate: Скорость обучения (learning rate).
-        optimizer: Выбранный оптимизатор (SGD, Adam и т.д.).
-        metrics: Словарь активных метрик.
-    """
-
-    task_type: str = "Классификация"
-    epochs: int = 50
-    batch_size: int = 32
-    learning_rate: float = 0.001
-    optimizer: str = "Adam"
-    metrics: dict[str, bool] = field(
-        default_factory=lambda: {"loss": True, "accuracy": True}
-    )
 
 
 class TrainingControlWidget(QWidget):
@@ -64,13 +44,7 @@ class TrainingControlWidget(QWidget):
 
         # Выбор типа задачи
         self.task_combo = ComboBox()
-        self.task_combo.addItems(
-            [
-                "Классификация",
-                "Регрессия",
-                "Кластеризация",
-            ]
-        )
+        self.task_combo.addItems(list(PUBLIC_LOSS_MAPPING.keys()))
         self.task_combo.value_changed.connect(self._on_config_changed)
         task_field = FormField("Тип задачи", self.task_combo)
         layout.addWidget(task_field)
@@ -89,7 +63,7 @@ class TrainingControlWidget(QWidget):
         batch_field = FormField("Размер батча", self.batch_size_spinbox)
         layout.addWidget(batch_field)
 
-        # Скорость обучения
+        # Learning rate
         self.learning_rate_spinbox = DoubleSpinBox(
             min=0.00001,
             max=1.0,
@@ -97,19 +71,12 @@ class TrainingControlWidget(QWidget):
         )
         self.learning_rate_spinbox.setValue(0.001)
         self.learning_rate_spinbox.value_changed.connect(self._on_config_changed)
-        lr_field = FormField("Скорость обучения", self.learning_rate_spinbox)
+        lr_field = FormField("Learning rate", self.learning_rate_spinbox)
         layout.addWidget(lr_field)
 
         # Выбор оптимизатора
         self.optimizer_combo = ComboBox()
-        self.optimizer_combo.addItems(
-            [
-                "Adam",
-                "SGD",
-                "RMSprop",
-                "Adamax",
-            ]
-        )
+        self.optimizer_combo.addItems(list(OPTIMIZER_REGISTRY.keys()))
         self.optimizer_combo.value_changed.connect(self._on_config_changed)
         optimizer_field = FormField("Оптимизатор", self.optimizer_combo)
         layout.addWidget(optimizer_field)

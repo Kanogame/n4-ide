@@ -1,7 +1,7 @@
 from ide.domain.datasets.base import Dataset, DatasetField, DatasetResult, FieldType
 from ide.domain.datasets.xor import XORDataset
 
-# Реестр всех доступных датасетов, отображение имён на классы
+# Реестр всех доступных датасетов
 DATASET_REGISTRY: dict[str, type[Dataset]] = {
     "xor": XORDataset,
 }

@@ -1,9 +1,3 @@
-"""Контроллер для управления датасетами.
-
-Содержит бизнес-логику для генерации датасетов и интеграции
-с UI компонентами.
-"""
-
 from typing import Any
 from PyQt6.QtCore import QThread, pyqtSignal
 from dataclasses import dataclass

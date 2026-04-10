@@ -1,5 +1,3 @@
-"""Абстрактный базовый класс и типы данных для датасетов."""
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Optional

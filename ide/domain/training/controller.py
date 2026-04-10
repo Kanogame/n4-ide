@@ -1,12 +1,17 @@
-from typing import Any, Optional, Callable
+from typing import Self, Any, Optional, Callable
 
 from PyQt6.QtCore import QThread, pyqtSignal, QObject
 
-from ide.domain.execution.training_executor import (
+from ide.domain.training.executor import (
     TrainingExecutor,
-    TrainingResult,
 )
-from ide.presentation.components.trainer_panel.training_control import TrainingConfig
+from ide.domain.training.models import (
+    TrainingConfig,
+    TrainingResult,
+    TrainingExecutorConfig,
+)
+
+
 from ide.presentation.components.trainer_panel.training_log_reader import (
     QtLogHandler,
 )
@@ -34,7 +39,7 @@ class TrainingWorkerThread(QThread):
     error = pyqtSignal(str)
 
     def __init__(
-        self,
+        self: Self,
         model_class: type,
         dataset_x: Any,
         dataset_y: Any,
@@ -55,7 +60,7 @@ class TrainingWorkerThread(QThread):
         self.model_class = model_class
         self.dataset_x = dataset_x
         self.dataset_y = dataset_y
-        self.config = config
+        self.config = TrainingExecutorConfig(config)
 
         self.executor = TrainingExecutor()
         self._setup_logging()

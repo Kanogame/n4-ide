@@ -1,7 +1,7 @@
 from ide.presentation.components.common.navbar_widget import NavBar
 from ide.domain.datasets.controller import DatasetGenerationWorker
 from ide.domain.execution.controller import ExecutionController
-from ide.domain.execution.training_controller import TrainingController
+from ide.domain.training.controller import TrainingController
 from ide.application.app import Application
 from typing import Self, Optional, Any
 from PyQt6.QtWidgets import (
@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.dataset_panel_view import DatasetPanelView
 from ide.presentation.components.trainer_panel_view import TrainerPanelView
+from ide.presentation.components.trainer_panel.training_control import TrainingConfig
 
 from ide.presentation.common.mixins import StyledMainWindow
 
@@ -250,7 +251,7 @@ class MainWindow(StyledMainWindow):
         self.app.append_output(f"✗ Ошибка генерации датасета: {error_message}")
         self.app.error_occurred.emit(error_message)
 
-    def _on_training_started(self, config) -> None:
+    def _on_training_started(self: Self, config: TrainingConfig) -> None:
         """Обработчик сигнала начала обучения.
 
         Проверяет наличие модели и датасета, затем запускает
@@ -262,7 +263,7 @@ class MainWindow(StyledMainWindow):
         # Проверить наличие модели
         if self.current_model_class is None:
             self.app.append_output(
-                "✗ Ошибка: сначала нужно загрузить модель (раздел 'Модель')"
+                "Ошибка: сначала нужно загрузить модель (раздел 'Модель')"
             )
             self.trainer.set_training_enabled(True)
             return
@@ -270,7 +271,7 @@ class MainWindow(StyledMainWindow):
         # Проверить наличие датасета
         if self.current_dataset_x is None or self.current_dataset_y is None:
             self.app.append_output(
-                "✗ Ошибка: сначала нужно сгенерировать датасет (раздел 'Датасет')"
+                "Ошибка: сначала нужно сгенерировать датасет (раздел 'Датасет')"
             )
             self.trainer.set_training_enabled(True)
             return

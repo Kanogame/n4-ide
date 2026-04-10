@@ -1,25 +1,8 @@
 import logging
 import time
-from dataclasses import dataclass
-from typing import Optional, Any
-from ide.presentation.components.trainer_panel.training_control import TrainingConfig
+from typing import Any
 
-
-@dataclass(frozen=True)
-class TrainingResult:
-    """Неизменяемый результат процесса обучения.
-
-    Attributes:
-        success: Успешно ли завершилось обучение.
-        error_message: Сообщение об ошибке если обучение не удалось.
-        final_metrics: Словарь финальных метрик.
-        duration_seconds: Длительность обучения в секундах.
-    """
-
-    success: bool
-    error_message: Optional[str] = None
-    final_metrics: Optional[dict[str, Any]] = None
-    duration_seconds: float = 0.0
+from ide.domain.training.models import TrainingExecutorConfig, TrainingResult
 
 
 class TrainingExecutor:
@@ -69,7 +52,7 @@ class TrainingExecutor:
         model_class: type,
         dataset_x: Any,
         dataset_y: Any,
-        config: TrainingConfig,
+        config: TrainingExecutorConfig,
     ) -> TrainingResult:
         """Выполнить обучение модели с использованием n4 framework.
 
@@ -94,25 +77,20 @@ class TrainingExecutor:
             # Импортировать необходимые компоненты n4
             from n4.numeric import PyFloat
             from n4.tensor import Tensor
-            from n4.nn.loss import MSELoss
-            from n4.optim import SGD
 
             # Создать экземпляр модели
             model = model_class()
             self.logger.info(f"Модель создана: {model_class.__name__}")
 
-            # Выбрать loss функцию в зависимости от задачи
-            if config.task_type == "Регрессия":
-                loss_fn = MSELoss()
-                self.logger.info("Loss функция: MSELoss (регрессия)")
-            else:
-                # Для классификации используем MSELoss по умолчанию
-                loss_fn = MSELoss()
-                self.logger.info("Loss функция: MSELoss (классификация)")
+            # Выбрать loss функцию
+            loss_fn = config.loss
+            self.logger.info(f"Loss функция: {loss_fn.__class__.__name__}")
 
             # Создать оптимизатор
-            optimizer = SGD(model.parameters(), lr=config.learning_rate)
-            self.logger.info(f"Оптимизатор: SGD, lr={config.learning_rate}")
+            optimizer = config.optimizer(model.parameters(), lr=config.learning_rate)
+            self.logger.info(
+                f"Оптимизатор: {optimizer.__class__.__name__}, lr={config.learning_rate}"
+            )
 
             # Конвертировать данные в Tensor если нужно
             if not isinstance(dataset_x, Tensor):
