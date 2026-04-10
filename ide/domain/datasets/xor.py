@@ -13,6 +13,10 @@ class XORDataset(Dataset):
     - [1, 0] → 1
     - [1, 1] → 0
 
+    Выходные значения (y) представлены в one-hot формате:
+    - класс 0 → [1, 0]
+    - класс 1 → [0, 1]
+
     Датасет можно масштабировать путём добавления шума и дублирования
     основных точек.
 
@@ -60,20 +64,20 @@ class XORDataset(Dataset):
         1. Создать 4 базовых точки XOR (углы квадрата)
         2. Дублировать каждую точку samples_per_class раз
         3. Добавить гауссов шум согласно noise параметру
-        4. Создать соответствующие целевые значения (y)
+        4. Создать соответствующие целевые значения в one-hot формате (y)
 
         Args:
             config: Словарь с ключами "samples_per_class" и "noise".
 
         Returns:
-            DatasetResult с массивами X (n_samples, 2) и y (n_samples,).
+            DatasetResult с массивами X (n_samples, 2) и y (n_samples, 2) в one-hot виде.
         """
         samples_per_class: int = config.get("samples_per_class", 100)
         noise: float = config.get("noise", 0.1)
 
         # Базовые точки XOR (4 класса на углах квадрата)
-        # Класс 0: [0, 0] и [1, 1] (целевое значение 0)
-        # Класс 1: [0, 1] и [1, 0] (целевое значение 1)
+        # Класс 0: [0, 0] и [1, 1] (целевое значение 0 → one-hot [1, 0])
+        # Класс 1: [0, 1] и [1, 0] (целевое значение 1 → one-hot [0, 1])
         base_points = [
             np.array([0.0, 0.0]),  # XOR: 0
             np.array([1.0, 1.0]),  # XOR: 0
@@ -81,13 +85,19 @@ class XORDataset(Dataset):
             np.array([1.0, 0.0]),  # XOR: 1
         ]
 
-        targets = [0, 0, 1, 1]
+        # One-hot векторы для каждого класса
+        one_hot_targets = [
+            np.array([1.0, 0.0]),  # класс 0
+            np.array([0.0, 1.0]),  # класс 1
+        ]
+        # Соответствие базовых точек one-hot векторам
+        target_indices = [0, 0, 1, 1]  # индексы в one_hot_targets
 
         X_list: list[np.ndarray] = []
-        y_list: list[int] = []
+        y_list: list[np.ndarray] = []
 
         # Генерировать sample_per_class примеров около каждой базовой точки
-        for point, target in zip(base_points, targets):
+        for point, t_idx in zip(base_points, target_indices):
             # Создать samples_per_class примеров вокруг базовой точки
             samples = np.random.normal(
                 loc=point,
@@ -96,11 +106,12 @@ class XORDataset(Dataset):
             )
 
             X_list.append(samples)
-            y_list.extend([target] * samples_per_class)
+            # Добавить one-hot векторы для каждого сгенерированного примера
+            y_list.extend([one_hot_targets[t_idx]] * samples_per_class)
 
         # Объединить все примеры
         X = np.vstack(X_list)
-        y = np.array(y_list)
+        y = np.vstack(y_list)  # теперь y имеет форму (n_samples, 2)
 
         # Перемешать датасет
         indices = np.random.permutation(len(X))
@@ -111,5 +122,5 @@ class XORDataset(Dataset):
             X=X,
             y=y,
             title="XOR Dataset",
-            description=f"XOR with {len(X)} samples and noise={noise}",
+            description=f"XOR with {len(X)} samples, noise={noise}, one-hot encoded",
         )

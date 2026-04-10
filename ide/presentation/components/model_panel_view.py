@@ -194,17 +194,22 @@ class ModelPanelView(QWidget):
             Строка с кодом шаблона класса модели.
         """
         return """
+
 class MyModel(Model[PyFloat]):
     def __init__(self) -> None:
         self.backend = PyFloat
         self.model = Sequential(
-            DenseLayer(5, 10, self.backend, Relu[PyFloat]),
-            DenseLayer(10, 3, self.backend, NonOp),
+            DenseLayer(2, 12, self.backend, Relu),
+            DenseLayer(12, 2, self.backend, NonOp),
             SoftmaxLayer(self.backend),
         )
 
     def forward_pass(self, x: Tensor[PyFloat]) -> Tensor[PyFloat]:
-        return self.forward_pass(x)
+        return self.model.forward_pass(x)
+
+    def parameters(self):
+        return self.model.parameters()
+
 """
 
     def _check_syntax(self) -> bool:

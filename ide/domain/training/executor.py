@@ -96,9 +96,7 @@ class TrainingExecutor:
             if not isinstance(dataset_x, Tensor):
                 dataset_x = Tensor(
                     [
-                        type(dataset_x.flat[0])(v, PyFloat)
-                        if hasattr(type(dataset_x.flat[0]), "__call__")
-                        else __import__("n4.core", fromlist=["Value"]).Value.from_float(
+                        __import__("n4.core", fromlist=["Value"]).Value.from_float(
                             float(v), PyFloat
                         )
                         for v in dataset_x.flat
@@ -131,10 +129,6 @@ class TrainingExecutor:
                     self.logger.info("Обучение остановлено пользователем")
                     break
 
-                # Пауза если требуется
-                while self._is_paused:
-                    time.sleep(0.1)
-
                 # Обнулить градиенты
                 model.zero_grad()
 
@@ -152,7 +146,7 @@ class TrainingExecutor:
 
                 # Извлечь значение loss
                 try:
-                    loss_scalar = float(loss_value.data)
+                    loss_scalar = float(loss_value.data.v)
                 except (AttributeError, TypeError):
                     # Если loss не имеет .data, попробовать прямое преобразование
                     loss_scalar = float(str(loss_value))

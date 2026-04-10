@@ -1,6 +1,6 @@
 import typing
 import ast
-from typing import Type, Any, Optional
+from typing import Type, Any
 
 
 # Список запрещённых модулей для импорта в целях безопасности
@@ -154,7 +154,7 @@ class SafeExecutor:
                 Model,
                 Sequential,
             )
-            from n4.nn.loss import MSELoss, CrossEntropyLoss
+            from n4.loss import MSELoss, CrossEntropyLoss
             from n4.op import Relu, Tanh, NonOp, Add, Mul, Div, Sub, Pow
             from n4.optim import SGD
 

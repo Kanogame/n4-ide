@@ -13,6 +13,11 @@ class DatasetVisualizerWidget(QWidget):
     Отображает двумерные данные (X, y) как scatter plot,
     где каждый класс обозначен разным цветом.
 
+    Поддерживает:
+    - Целевые метки в виде одномерного массива (n_samples,)
+    - One-hot закодированные метки (n_samples, n_classes) — автоматически
+      преобразуются в классы с помощью argmax.
+
     Features:
     - Автоматическое масштабирование графика
     - Цветовая кодировка классов
@@ -46,7 +51,9 @@ class DatasetVisualizerWidget(QWidget):
         Args:
             X: Массив входных данных (n_samples, n_features).
                 Поддерживает только 2D данные.
-            y: Массив целевых значений (n_samples,).
+            y: Массив целевых значений:
+                - (n_samples,) с целочисленными метками классов
+                - (n_samples, n_classes) в one-hot формате (преобразуется в метки)
             title: Название графика.
         """
         # Очистить предыдущую фигуру
@@ -56,7 +63,15 @@ class DatasetVisualizerWidget(QWidget):
         X_arr = np.asarray(X)
         y_arr = np.asarray(y)
 
-        # Проверить размерность
+        # Преобразовать one-hot в метки классов, если необходимо
+        if y_arr.ndim == 2 and y_arr.shape[1] > 1:
+            # One-hot encoding: взять индекс максимального значения
+            y_labels = np.argmax(y_arr, axis=1)
+        else:
+            # Уже метки классов (1D)
+            y_labels = y_arr.flatten()  # на случай (n_samples,1)
+
+        # Проверить размерность X
         if X_arr.ndim != 2 or X_arr.shape[1] != 2:
             # Если не 2D, показать сообщение об ошибке
             ax = self.figure.add_subplot(111)
@@ -75,14 +90,14 @@ class DatasetVisualizerWidget(QWidget):
         ax = self.figure.add_subplot(111)
 
         # Определить уникальные классы
-        unique_classes = np.unique(y_arr)
+        unique_classes = np.unique(y_labels)
 
         # Цвета для классов
         colors = ["#005FB8", "#DE2FDE", "#51CF66", "#FFD93D", "#A78BFA"]
 
         # Нарисовать каждый класс отдельно
         for i, class_label in enumerate(unique_classes):
-            mask = y_arr == class_label
+            mask = y_labels == class_label
             X_class = X_arr[mask]
 
             color = colors[i % len(colors)]

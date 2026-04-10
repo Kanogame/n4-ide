@@ -1,13 +1,13 @@
 from n4.loss import Loss, MSELoss, CrossEntropyLoss
 
 # Реестр всех доступных функций потерь
-LOSS_REGISTRY = dict[str, type[Loss]] = {
+LOSS_REGISTRY: dict[str, type[Loss]] = {
     "MSE": MSELoss,
     "CrossEntropy": CrossEntropyLoss,
 }
 
 # Маппинг потерь для UI
-PUBLIC_LOSS_MAPPING = dict[str, str] = {
+PUBLIC_LOSS_MAPPING: dict[str, str] = {
     "Регрессия": "MSE",
     "Классификация": "CrossEntropy",
 }
