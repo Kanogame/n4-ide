@@ -15,7 +15,7 @@ class TrainingConfig:
         batch_size: Размер батча для обучения.
         learning_rate: Скорость обучения (learning rate).
         optimizer: Выбранный оптимизатор (SGD, Adam и т.д.).
-        metrics: Словарь активных метрик.
+        metrics: Словарь активных метрик (имя -> включена ли).
     """
 
     task_type: str = "Классификация"
@@ -32,17 +32,28 @@ class TrainingConfig:
 class TrainingResult:
     """Неизменяемый результат процесса обучения.
 
+    Хранит итоговые результаты обучения, включая финальные метрики,
+    историю метрик по эпохам/батчам и диагностическую информацию.
+
     Attributes:
         success: Успешно ли завершилось обучение.
         error_message: Сообщение об ошибке если обучение не удалось.
-        final_metrics: Словарь финальных метрик.
-        duration_seconds: Длительность обучения в секундах.
+        final_metrics: Словарь финальных значений метрик по эпохам.
+        epoch_metrics_history: История агрегированных метрик по эпохам.
+        batch_metrics_history: История метрик по батчам для детального анализа.
+        duration_seconds: Общая длительность обучения в секундах.
+        epochs_completed: Количество завершённых эпох.
+        total_samples_processed: Общее количество обработанных образцов.
     """
 
     success: bool
     error_message: Optional[str] = None
     final_metrics: Optional[dict[str, Any]] = None
+    epoch_metrics_history: dict[int, dict[str, float]] = field(default_factory=dict)
+    batch_metrics_history: dict[int, dict[str, float]] = field(default_factory=dict)
     duration_seconds: float = 0.0
+    epochs_completed: int = 0
+    total_samples_processed: int = 0
 
 
 class TrainingExecutorConfig:

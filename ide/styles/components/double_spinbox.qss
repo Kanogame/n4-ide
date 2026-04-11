@@ -5,9 +5,6 @@ DoubleSpinBox {
     border: 1px solid #EAEAEA;
     border-bottom: 1px solid #D6D6D6;
     color: rgba(0, 0, 0, 0.90);
-
-    font-family: "Open Sans";
-    font-size: 14px;
 }
 
 DoubleSpinBox:hover {

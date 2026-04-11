@@ -15,3 +15,6 @@ dependencies = [
 
 [tool.uv.sources]
 n4 = { git = "https://github.com/kanogame/n4" }
+
+[tool.setuptools.package-data]
+n4 = ["py.typed"]

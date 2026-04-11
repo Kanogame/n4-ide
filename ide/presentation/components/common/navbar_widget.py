@@ -91,17 +91,17 @@ class NavBar(QFrame, StyledMixin):
 
         self.add_item(
             NavItem(
-                id="model",
-                icon_path="assets/icons/model.svg",
-                tooltip="Model Inspector",
+                id="metrics",
+                icon_path="assets/icons/graph.svg",
+                tooltip="Computation Graph",
             )
         )
 
         self.add_item(
             NavItem(
-                id="graph",
-                icon_path="assets/icons/graph.svg",
-                tooltip="Computation Graph",
+                id="model",
+                icon_path="assets/icons/model.svg",
+                tooltip="Model Inspector",
             )
         )
 

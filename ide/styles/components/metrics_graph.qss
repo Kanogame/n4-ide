@@ -1,0 +1,33 @@
+MetricsGraphWidget {
+    background-color: white;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+#MetricsGraphTitle {
+    color: rgba(0, 0, 0, 0.90);
+    font-family: "Open Sans";
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0px;
+    padding: 0px;
+}
+
+#MetricsGraphMetricCombo {
+    min-width: 180px;
+    background-color: rgba(255, 255, 255, 0.70);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    padding: 4px 12px;
+}
+
+#MetricsGraphMetricCombo:hover {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: rgba(255, 255, 255, 0.75);
+}
+
+#MetricsGraphMetricCombo:focus {
+    border: 1px solid #005FB8;
+    outline: 2px solid rgba(0, 95, 184, 0.2);
+}

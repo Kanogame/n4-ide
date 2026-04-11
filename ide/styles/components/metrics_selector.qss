@@ -1,0 +1,60 @@
+/* Стили для виджета выбора метрик */
+
+#MetricsSelector {
+    background-color: white;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+#MetricsSelectorTitle {
+    color: rgba(0, 0, 0, 0.90);
+    font-family: "Open Sans";
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+#MetricsSelector QCheckBox {
+    color: rgba(0, 0, 0, 0.90);
+    font-family: "Open Sans";
+    font-size: 12px;
+    font-weight: 400;
+    background-color: transparent;
+    padding: 4px 0px;
+    margin: 0px;
+    spacing: 8px;
+}
+
+#MetricsSelector QCheckBox:disabled {
+    color: rgba(0, 0, 0, 0.40);
+}
+
+#MetricsSelector QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: white;
+}
+
+#MetricsSelector QCheckBox::indicator:hover {
+    border: 1px solid rgba(0, 0, 0, 0.20);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+#MetricsSelector QCheckBox::indicator:checked {
+    background-color: #005FB8;
+    border: 1px solid #005FB8;
+    image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3 3 7-7' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+#MetricsSelector QCheckBox::indicator:checked:hover {
+    background-color: #003A70;
+    border: 1px solid #003A70;
+}
+
+#MetricsSelector QCheckBox::indicator:disabled {
+    background-color: #F3F3F3;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}

@@ -12,6 +12,7 @@ from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.form_field import FormField
+from ide.presentation.components.common.metrics_selector import MetricsSelector
 
 
 class TrainingControlWidget(QWidget):
@@ -45,7 +46,7 @@ class TrainingControlWidget(QWidget):
         # Выбор типа задачи
         self.task_combo = ComboBox()
         self.task_combo.addItems(list(PUBLIC_LOSS_MAPPING.keys()))
-        self.task_combo.value_changed.connect(self._on_config_changed)
+        self.task_combo.value_changed.connect(self._on_task_changed)
         task_field = FormField("Тип задачи", self.task_combo)
         layout.addWidget(task_field)
 
@@ -81,10 +82,18 @@ class TrainingControlWidget(QWidget):
         optimizer_field = FormField("Оптимизатор", self.optimizer_combo)
         layout.addWidget(optimizer_field)
 
+        # Селектор метрик для отслеживания
+        self.metrics_selector = MetricsSelector()
+        self.metrics_selector.metrics_changed.connect(self._on_metrics_changed)
+        layout.addWidget(self.metrics_selector)
+
         layout.addStretch()
 
         # Инициализировать конфигурацию
         self._current_config = TrainingConfig()
+
+        # Инициализировать метрики в зависимости от типа задачи
+        self._update_metrics_for_task()
 
     def get_config(self) -> TrainingConfig:
         """Получить текущую конфигурацию обучения.
@@ -98,6 +107,7 @@ class TrainingControlWidget(QWidget):
             batch_size=self.batch_size_spinbox.value(),
             learning_rate=self.learning_rate_spinbox.value(),
             optimizer=self.optimizer_combo.currentText(),
+            metrics=self.metrics_selector.get_selected_metrics(),
         )
 
     def set_config(self, config: TrainingConfig) -> None:
@@ -114,6 +124,7 @@ class TrainingControlWidget(QWidget):
         self.batch_size_spinbox.blockSignals(True)
         self.learning_rate_spinbox.blockSignals(True)
         self.optimizer_combo.blockSignals(True)
+        self.metrics_selector.metrics_changed.disconnect()
 
         # Обновить значения
         index = self.task_combo.findText(config.task_type)
@@ -128,14 +139,46 @@ class TrainingControlWidget(QWidget):
         if opt_index >= 0:
             self.optimizer_combo.setCurrentIndex(opt_index)
 
+        # Обновить метрики
+        self._update_metrics_for_task()
+        if config.metrics:
+            self.metrics_selector.set_selected_metrics(config.metrics)
+
         # Разблокировать сигналы
         self.task_combo.blockSignals(False)
         self.epochs_spinbox.blockSignals(False)
         self.batch_size_spinbox.blockSignals(False)
         self.learning_rate_spinbox.blockSignals(False)
         self.optimizer_combo.blockSignals(False)
+        self.metrics_selector.metrics_changed.connect(self._on_metrics_changed)
 
     def _on_config_changed(self) -> None:
         """Обработчик при изменении любого параметра конфигурации."""
+        self._current_config = self.get_config()
+        self.config_changed.emit(self._current_config)
+
+    def _on_task_changed(self) -> None:
+        """Обработчик при изменении типа задачи.
+
+        Обновляет доступные метрики и эмитирует сигнал конфигурации.
+        """
+        self._update_metrics_for_task()
+        self._on_config_changed()
+
+    def _update_metrics_for_task(self) -> None:
+        """Обновить доступные метрики при изменении типа задачи.
+
+        Вызывается при изменении выбранного типа задачи для обновления
+        списка доступных метрик в селекторе метрик.
+        """
+        current_task = self.task_combo.currentText()
+        self.metrics_selector.set_task_type(current_task)
+
+    def _on_metrics_changed(self, metrics: dict[str, bool]) -> None:
+        """Обработчик при изменении выбранных метрик.
+
+        Args:
+            metrics: Словарь выбранных метрик.
+        """
         self._current_config = self.get_config()
         self.config_changed.emit(self._current_config)

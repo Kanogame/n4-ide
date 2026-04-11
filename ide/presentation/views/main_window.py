@@ -1,3 +1,4 @@
+from ide.presentation.components.metrics_panel_view import MetricsPanelView
 from ide.presentation.components.common.navbar_widget import NavBar
 from ide.domain.datasets.controller import DatasetGenerationWorker
 from ide.domain.execution.controller import ExecutionController
@@ -110,6 +111,9 @@ class MainWindow(StyledMainWindow):
         self.trainer = TrainerPanelView()
         self.stacked.addWidget(self.trainer)
 
+        self.metrics = MetricsPanelView()
+        self.stacked.addWidget(self.metrics)
+
         self.content_layout.addWidget(self.stacked)
 
         # Подключить сигналы модели
@@ -143,6 +147,7 @@ class MainWindow(StyledMainWindow):
             "code": 0,
             "dataset": 1,
             "trainer": 2,
+            "metrics": 3,
         }
 
         # Вызываем смену раздела
