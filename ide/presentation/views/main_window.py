@@ -1,4 +1,5 @@
 from ide.presentation.components.metrics_panel_view import MetricsPanelView
+from ide.presentation.components.visualization_panel_view import VisualizationPanelView
 from ide.presentation.components.common.navbar_widget import NavBar
 from ide.domain.datasets.controller import DatasetGenerationWorker
 from ide.domain.execution.controller import ExecutionController
@@ -95,6 +96,7 @@ class MainWindow(StyledMainWindow):
         Включает:
         - ModelPanelView для редактирования модели
         - DatasetPanelView для генерации датасетов
+        - VisualizationPanelView для визуализации архитектуры и вычислений
         - TrainerPanelView для обучения модели
         - Подключение сигналов для взаимодействия компонентов
         """
@@ -107,6 +109,9 @@ class MainWindow(StyledMainWindow):
 
         self.dataset = DatasetPanelView()
         self.stacked.addWidget(self.dataset)
+
+        self.visualization = VisualizationPanelView()
+        self.stacked.addWidget(self.visualization)
 
         self.trainer = TrainerPanelView()
         self.stacked.addWidget(self.trainer)
@@ -124,6 +129,13 @@ class MainWindow(StyledMainWindow):
 
         # Подключить сигнал генерации датасета
         self.dataset.generate_requested.connect(self._on_dataset_generate_requested)
+
+        # Подключить сигналы визуализации к приложению
+        self.app.model_loaded.connect(self.visualization.set_model)
+        self.app.backend_changed.connect(self.visualization.set_backend)
+        self.app.computational_graph_ready.connect(
+            self.visualization.set_computational_graph
+        )
 
         # Подключить сигналы обучения
         self.trainer.training_started.connect(self._on_training_started)
@@ -145,8 +157,9 @@ class MainWindow(StyledMainWindow):
         item_id_mapping = {
             "code": 0,
             "dataset": 1,
-            "trainer": 2,
-            "metrics": 3,
+            "visualization": 2,
+            "trainer": 3,
+            "metrics": 4,
         }
 
         # Вызываем смену раздела
@@ -323,6 +336,10 @@ class MainWindow(StyledMainWindow):
             collector_repository = self.training_controller.get_collector_repository()
             if collector_repository is not None:
                 self.metrics.set_metrics_storage(collector_repository)
+
+            # Передать вычислительный граф в панель визуализации
+            if result.computational_graph is not None:
+                self.app.set_computational_graph(result.computational_graph)
         else:
             self.app.append_output(f"✗ Ошибка обучения: {result.error_message}")
             self.app.error_occurred.emit(result.error_message or "Unknown error")

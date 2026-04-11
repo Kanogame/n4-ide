@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any
+from typing import Any, Optional
 
 from ide.domain.training.models import TrainingExecutorConfig, TrainingResult
 from ide.domain.collectors import (
@@ -25,6 +25,8 @@ class TrainingExecutor:
         self.logger = self._setup_logger()
         self._is_running = False
         self._collector_repository: CollectorRepository = CollectorRepository()
+        self._last_loss_value: Optional[Any] = None
+        self._computational_graph: Optional[Any] = None
 
     @staticmethod
     def _setup_logger() -> logging.Logger:
@@ -222,6 +224,7 @@ class TrainingExecutor:
                 duration_seconds=duration,
                 epochs_completed=epochs_completed,
                 total_samples_processed=total_samples_processed,
+                computational_graph=self._computational_graph,
             )
 
         except Exception as e:
@@ -312,6 +315,17 @@ class TrainingExecutor:
 
             # Вычислить loss
             loss_value = loss_fn(predictions, batch_y)
+
+            # Сохранить последнее значение loss и собрать граф сразу
+            self._last_loss_value = loss_value
+
+            # Попытаться собрать граф пока value ещё действителен
+            if self._computational_graph is None:
+                try:
+                    self._computational_graph = loss_value.collect_graph()
+                except Exception:
+                    # Граф может быть недоступен, это нормально
+                    pass
 
             # Backward pass
             loss_value.backward()

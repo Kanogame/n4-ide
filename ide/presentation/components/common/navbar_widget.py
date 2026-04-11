@@ -83,6 +83,14 @@ class NavBar(QFrame, StyledMixin):
 
         self.add_item(
             NavItem(
+                id="visualization",
+                icon_path="assets/icons/graph.svg",
+                tooltip="Model Visualization",
+            )
+        )
+
+        self.add_item(
+            NavItem(
                 id="trainer",
                 icon_path="assets/icons/training.svg",
                 tooltip="Model Trainer",
@@ -92,8 +100,8 @@ class NavBar(QFrame, StyledMixin):
         self.add_item(
             NavItem(
                 id="metrics",
-                icon_path="assets/icons/graph.svg",
-                tooltip="Computation Graph",
+                icon_path="assets/icons/chart.svg",
+                tooltip="Training Metrics",
             )
         )
 

@@ -1,0 +1,14 @@
+/* Стили для панели визуализации вычислительного графа и архитектуры модели */
+
+QWidget#VisualizationPanel {
+    background-color: white;
+    border-radius: 8px;
+}
+
+/* Стили для CompGraphViewer */
+QGraphicsView {
+    background-color: white;
+    border-radius: 7px;
+    border: 1px solid #E0E0E0;
+    outline: none;
+}

@@ -44,6 +44,7 @@ class TrainingResult:
         duration_seconds: Общая длительность обучения в секундах.
         epochs_completed: Количество завершённых эпох.
         total_samples_processed: Общее количество обработанных образцов.
+        computational_graph: Вычислительный граф последней операции (если доступен).
     """
 
     success: bool
@@ -54,6 +55,7 @@ class TrainingResult:
     duration_seconds: float = 0.0
     epochs_completed: int = 0
     total_samples_processed: int = 0
+    computational_graph: Optional[Any] = None
 
 
 class TrainingExecutorConfig:

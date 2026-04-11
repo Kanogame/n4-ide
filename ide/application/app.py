@@ -65,6 +65,8 @@ class Application(QObject):
     error_occurred = pyqtSignal(str)  # Произошла ошибка
     dataset_loaded = pyqtSignal(DatasetState)  # Датасет загружен
     training_state_changed = pyqtSignal(TrainingState)  # Состояние обучения изменилось
+    backend_changed = pyqtSignal(str)  # Выбранный бекенд изменился
+    computational_graph_ready = pyqtSignal(object)  # Вычислительный граф готов
 
     def __init__(self) -> None:
         super().__init__()
@@ -132,10 +134,20 @@ class Application(QObject):
             backend: Название backend (PyFloat, NumPy, PyTorch).
         """
         self._selected_backend = backend
+        self.backend_changed.emit(backend)
 
     def get_backend(self) -> str:
         """Получить выбранный backend."""
         return self._selected_backend
+
+    def set_computational_graph(self, comp_graph: Optional[object]) -> None:
+        """Установить вычислительный граф для визуализации.
+
+        Args:
+            comp_graph: CompGraph объект из n4 library или None.
+        """
+        if comp_graph is not None:
+            self.computational_graph_ready.emit(comp_graph)
 
     def set_training_state(self, state: TrainingState) -> None:
         """Установить состояние обучения.
