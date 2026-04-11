@@ -87,8 +87,8 @@ class Editor(QFrame, StyledMixin):
     def __init__(self) -> None:
         self.backend = PyFloat
         self.model = Sequential(
-            DenseLayer(2, 12, self.backend, Relu),
-            DenseLayer(12, 2, self.backend, NonOp),
+            DenseLayer(2, 1, self.backend, Relu),
+            DenseLayer(1, 2, self.backend, NonOp),
             SoftmaxLayer(self.backend),
         )
 

@@ -1,3 +1,4 @@
+from n4.nn import Model
 import typing
 import ast
 from typing import Type, Any
@@ -204,7 +205,7 @@ class SafeExecutor:
         except ImportError as e:
             raise RuntimeError(f"Failed to import n4 modules: {e}")
 
-    def extract_model(self, env: dict[str, Any]) -> Type[Any]:
+    def extract_model(self, env: dict[str, Any]) -> Type[Model]:
         """Найти и вернуть класс модели из namespace выполнения.
 
         Ищет в пространстве имён класс, который является подклассом n4.nn.Model
@@ -219,8 +220,6 @@ class SafeExecutor:
         Raises:
             RuntimeError: Если не найдено подходящего класса модели
         """
-        # Импортируем Model для проверки подклассов
-        from n4.nn.model import Model
 
         for obj in env.values():
             if isinstance(obj, type):

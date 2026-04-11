@@ -1,11 +1,8 @@
-"""Панель визуализации вычислительного графа и архитектуры модели.
-
-Предоставляет интерактивную визуализацию двух видов:
-1. Вычислительный граф - операции и значения из прямого прохода модели
-2. Послойно - архитектура модели с информацией о слоях и параметрах
-"""
-
-from typing import Optional, Any, Self
+from graphviz import Digraph
+from n4.nn import Sequential, Model
+from n4.core import CompGraph
+from enum import Enum, auto
+from typing import Optional, Self
 from dataclasses import dataclass
 
 from PyQt6.QtWidgets import QWidget
@@ -15,14 +12,21 @@ from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.panel_view import PanelView
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.form_field import FormField
-from ide.presentation.components.common.comp_graph_viewer import CompGraphViewer
-from ide.domain.visualization.graph_builder import (
+from ide.presentation.components.visualization_panel import CompGraphViewer
+from ide.domain.visualization import (
     LayersGraphBuilder,
     ComputationalGraphBuilder,
 )
 
 
-@dataclass(frozen=True)
+class VisualizationMode(Enum):
+    """Режимы визуализации."""
+
+    COMPUTATIONAL = auto()
+    LAYERS = auto()
+
+
+@dataclass()
 class VisualizationState:
     """Неизменяемое состояние визуализации.
 
@@ -33,17 +37,9 @@ class VisualizationState:
         visualization_mode: Текущий режим визуализации ("computational" или "layers").
     """
 
-    model: Optional[Any] = None
-    comp_graph: Optional[Any] = None
-    backend: str = "PyFloat"
-    visualization_mode: str = "layers"
-
-
-class VisualizationMode:
-    """Режимы визуализации."""
-
-    COMPUTATIONAL = "computational"
-    LAYERS = "layers"
+    model: Optional[Model] = None
+    comp_graph: Optional[CompGraph] = None
+    visualization_mode: VisualizationMode = VisualizationMode.LAYERS
 
 
 class VisualizationPanelView(QWidget, StyledMixin):
@@ -53,7 +49,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
     - Послойно: каждый слой как отдельный узел с параметрами
     - Вычислительный граф: операции и промежуточные значения
 
-    Supports pan and zoom navigation for large graphs.
+    Поддерживается pan & zoom
 
     Signals:
         None (read-only visualization)
@@ -110,7 +106,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
         self.graph_viewer = CompGraphViewer()
         self.main_content.add_widget(self.graph_viewer)
 
-    def set_model(self: Self, model: Any) -> None:
+    def set_model(self: Self, model: Model) -> None:
         """Установить модель для визуализации и отобразить её архитектуру.
 
         Args:
@@ -125,10 +121,10 @@ class VisualizationPanelView(QWidget, StyledMixin):
                 self.graph_viewer.clear_graph()
                 return
 
-            # Обновить состояние
+            # Обновить состояние, сохраняя вычислительный граф
             state = VisualizationState(
                 model=model,
-                backend=self._visualization_state.backend,
+                comp_graph=self._visualization_state.comp_graph,
                 visualization_mode=self._visualization_state.visualization_mode,
             )
 
@@ -141,66 +137,25 @@ class VisualizationPanelView(QWidget, StyledMixin):
             print(f"Ошибка при установке модели: {e}")
             self.graph_viewer.clear_graph()
 
-    def set_computational_graph(self: Self, comp_graph: Any) -> None:
+    def set_computational_graph(self: Self, comp_graph: CompGraph) -> None:
         """Установить вычислительный граф для визуализации.
 
         Args:
             comp_graph: CompGraph объект из n4 library (результат collect_graph).
         """
         try:
-            if comp_graph is None:
-                # Очистить вычислительный граф
-                state = VisualizationState(
-                    model=self._visualization_state.model,
-                    comp_graph=None,
-                    backend=self._visualization_state.backend,
-                    visualization_mode=self._visualization_state.visualization_mode,
-                )
-                self._visualization_state = state
-
-                # Если активен режим вычислительного графа, обновить
-                if (
-                    self._visualization_state.visualization_mode
-                    == VisualizationMode.COMPUTATIONAL
-                ):
-                    self.graph_viewer.clear_graph()
-
-                return
-
             # Обновить состояние
-            state = VisualizationState(
+            self._visualization_state = VisualizationState(
                 model=self._visualization_state.model,
                 comp_graph=comp_graph,
-                backend=self._visualization_state.backend,
                 visualization_mode=self._visualization_state.visualization_mode,
             )
 
-            self._visualization_state = state
-
             # Если активен режим вычислительного графа, обновить отображение
-            if (
-                self._visualization_state.visualization_mode
-                == VisualizationMode.COMPUTATIONAL
-            ):
-                self._update_visualization()
+            self._update_visualization()
 
         except Exception as e:
             print(f"Ошибка при установке вычислительного графа: {e}")
-
-    def set_backend(self: Self, backend: str) -> None:
-        """Установить выбранный вычислительный бекенд.
-
-        Args:
-            backend: Имя бекенда (например, "PyFloat", "NumPy", "PyTorch").
-        """
-        state = VisualizationState(
-            model=self._visualization_state.model,
-            comp_graph=self._visualization_state.comp_graph,
-            backend=backend,
-            visualization_mode=self._visualization_state.visualization_mode,
-        )
-
-        self._visualization_state = state
 
     def _on_visualization_mode_changed(self: Self, mode_name: str) -> None:
         """Обработчик изменения режима визуализации.
@@ -217,14 +172,11 @@ class VisualizationPanelView(QWidget, StyledMixin):
         mode = mode_map.get(mode_name, VisualizationMode.LAYERS)
 
         # Обновить состояние
-        state = VisualizationState(
+        self._visualization_state = VisualizationState(
             model=self._visualization_state.model,
             comp_graph=self._visualization_state.comp_graph,
-            backend=self._visualization_state.backend,
             visualization_mode=mode,
         )
-
-        self._visualization_state = state
 
         # Обновить визуализацию
         self._update_visualization()
@@ -235,6 +187,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
         Выбирает построитель графа (слои или вычислительный) в зависимости
         от режима и отображает результат.
         """
+
         try:
             mode = self._visualization_state.visualization_mode
 
@@ -268,7 +221,6 @@ class VisualizationPanelView(QWidget, StyledMixin):
 
             # Отобразить граф
             self.graph_viewer.set_graph(graph)
-
         except Exception as e:
             print(f"Ошибка при построении графа слоёв: {e}")
             self.graph_viewer.clear_graph()
@@ -284,34 +236,9 @@ class VisualizationPanelView(QWidget, StyledMixin):
             self.graph_viewer.clear_graph()
             return
 
-        try:
-            # Обернуть в построитель для согласованности
-            builder = ComputationalGraphBuilder(comp_graph)
-            graph = builder.export_graphviz()
+        # Обернуть в построитель для согласованности
+        builder = ComputationalGraphBuilder(comp_graph)
+        graph = builder.export_graphviz()
 
-            # Отобразить граф
-            self.graph_viewer.set_graph(graph)
-
-        except TypeError as e:
-            # Может быть ошибка типа если граф некорректен
-            print(f"Ошибка типа при построении вычислительного графа: {e}")
-            self.graph_viewer.clear_graph()
-        except Exception as e:
-            print(f"Ошибка при построении вычислительного графа: {e}")
-            self.graph_viewer.clear_graph()
-
-    def get_current_state(self: Self) -> VisualizationState:
-        """Получить текущее состояние визуализации.
-
-        Returns:
-            VisualizationState с текущими параметрами.
-        """
-        return self._visualization_state
-
-    def reset_zoom(self: Self) -> None:
-        """Сбросить масштабирование и отобразить граф в нормальном размере."""
-        self.graph_viewer.reset_zoom()
-
-    def fit_in_view(self: Self) -> None:
-        """Автоматически подогнать граф под размер окна."""
-        self.graph_viewer.fit_in_view()
+        # Отобразить граф
+        self.graph_viewer.set_graph(graph)

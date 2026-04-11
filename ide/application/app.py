@@ -1,11 +1,28 @@
+from n4.core import CompGraph
+from ide.domain.datasets import DatasetResult
+
+from n4.nn import Model
+from ide.domain.execution.controller import ExecutionController
+from ide.domain.training.controller import TrainingController
+from ide.application.dataset_manager import DatasetManager
+from ide.application.model_manager import ModelManager
+from ide.application.training_manager import TrainingManager
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, Self
 from PyQt6.QtCore import QObject, pyqtSignal
 
 
 @dataclass(frozen=True)
 class ExecutionResult:
-    """Неизменяемый результат выполнения кода."""
+    """Неизменяемый результат выполнения кода.
+
+    Attributes:
+        success: Флаг успеха выполнения.
+        output: Текст вывода программы.
+        error: Текст ошибки (если есть).
+        duration_ms: Длительность выполнения в миллисекундах.
+        variables: Словарь переменных из namespace.
+    """
 
     success: bool
     output: str
@@ -14,83 +31,71 @@ class ExecutionResult:
     variables: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(frozen=True)
-class TrainingState:
-    """Неизменяемое состояние обучения модели.
-
-    Attributes:
-        model_class: Класс модели для обучения.
-        model_instance: Экземпляр модели (если создана).
-        dataset_x: Входные данные датасета (ndarray или Tensor).
-        dataset_y: Целевые данные датасета (ndarray или Tensor).
-        backend: Выбранный вычислительный backend (PyFloat, NumPy, PyTorch).
-    """
-
-    model_class: Optional[type] = None
-    model_instance: Optional[Any] = None
-    dataset_x: Optional[Any] = None
-    dataset_y: Optional[Any] = None
-    backend: str = "PyFloat"
-
-
-@dataclass(frozen=True)
-class DatasetState:
-    """Неизменяемое состояние датасета.
-
-    Attributes:
-        name: Имя датасета.
-        x: Входные данные.
-        y: Целевые данные.
-        title: Название для отображения.
-    """
-
-    name: str
-    x: Any
-    y: Any
-    title: str = ""
-
-
 class Application(QObject):
     """Центральное приложение, управляющее состоянием IDE.
 
-    Служит связующим звеном между UI (presentation layer) и бизнес-логикой (domain layer).
-    Следует принципам Signal-Driven Architecture.
+    Служит связующим звеном между UI (presentation layer) и бизнес-логикой
+    (domain layer). Следует принципам Signal-Driven Architecture.
+
+    Attributes:
+        execution_controller: Контроллер выполнения кода.
+        training_controller: Контроллер обучения модели.
+        model_manager: Менеджер состояния модели.
+        dataset_manager: Менеджер состояния датасета.
+        training_manager: Менеджер процесса обучения.
     """
 
     # Сигналы для оповещения об изменениях состояния
-    execution_started = pyqtSignal()  # Выполнение кода начато
-    execution_finished = pyqtSignal(ExecutionResult)  # Выполнение кода завершено
-    output_received = pyqtSignal(str)  # Получен новый вывод
-    model_loaded = pyqtSignal(object)  # Модель загружена и готова
-    error_occurred = pyqtSignal(str)  # Произошла ошибка
-    dataset_loaded = pyqtSignal(DatasetState)  # Датасет загружен
-    training_state_changed = pyqtSignal(TrainingState)  # Состояние обучения изменилось
-    backend_changed = pyqtSignal(str)  # Выбранный бекенд изменился
-    computational_graph_ready = pyqtSignal(object)  # Вычислительный граф готов
+    execution_started = pyqtSignal()
+    execution_finished = pyqtSignal(ExecutionResult)
+    output_received = pyqtSignal(str)
+    error_occurred = pyqtSignal(str)
+    dataset_loaded = pyqtSignal(DatasetResult)
+    backend_changed = pyqtSignal(str)
+    computational_graph_ready = pyqtSignal(object)
+    model_ready = pyqtSignal(object)
 
     def __init__(self) -> None:
+        """Инициализировать приложение с контроллерами и менеджерами."""
         super().__init__()
-        self._model: Optional[object] = None
-        self._execution_namespace: dict[str, Any] = {}
+
+        # Инициализировать контроллеры
+        self.execution_controller = ExecutionController(
+            output_callback=self.append_output
+        )
+        self.training_controller = TrainingController()
+
+        # Инициализировать менеджеры
+        self.model_manager = ModelManager(self.execution_controller)
+        self.dataset_manager = DatasetManager()
+        self.training_manager = TrainingManager(self.training_controller)
+
+        # Буфер вывода и namespace
         self._output_buffer: list[str] = []
-        self._training_state = TrainingState()
-        self._dataset_state: Optional[DatasetState] = None
-        self._selected_backend: str = "PyFloat"
+        self._execution_namespace: dict[str, Any] = {}
 
-    def set_model(self, model: object) -> None:
-        """Установить текущую модель и извлечь из неё информацию.
+        # Подключить сигналы менеджеров к сигналам приложения
+        self._connect_managers()
 
-        Args:
-            model: Объект модели из namespace выполнения
-        """
-        self._model = model
-        self.model_loaded.emit(model)
+    def _connect_managers(self) -> None:
+        """Подключить сигналы менеджеров к сигналам приложения."""
+        # Подключить сигналы модели
+        self.model_manager.model_validation_failed.connect(
+            self._on_model_validation_failed
+        )
+        self.model_manager.backend_changed.connect(self.backend_changed.emit)
+
+        # Подключить сигналы датасета
+        self.dataset_manager.dataset_loaded.connect(self.dataset_loaded.emit)
+        self.dataset_manager.dataset_generation_error.connect(
+            self._on_dataset_generation_error
+        )
 
     def append_output(self, text: str) -> None:
         """Добавить текст в буфер вывода.
 
         Args:
-            text: Текст для добавления
+            text: Текст для добавления.
         """
         self._output_buffer.append(text)
         self.output_received.emit(text)
@@ -99,70 +104,58 @@ class Application(QObject):
         """Очистить буфер вывода."""
         self._output_buffer.clear()
 
-    def get_current_model(self) -> Optional[object]:
-        """Получить текущую загруженную модель."""
-        return self._model
-
     def get_execution_namespace(self) -> dict[str, Any]:
-        """Получить namespace последнего выполнения."""
+        """Получить namespace последнего выполнения.
+
+        Returns:
+            Копия namespace последнего выполнения кода.
+        """
         return self._execution_namespace.copy()
 
     def set_execution_namespace(self, namespace: dict[str, Any]) -> None:
-        """Установить namespace после выполнения кода."""
+        """Установить namespace после выполнения кода.
+
+        Args:
+            namespace: Новый namespace для сохранения.
+        """
         self._execution_namespace = namespace.copy()
 
-    def set_dataset(self, name: str, x: Any, y: Any, title: str = "") -> None:
-        """Установить текущий датасет.
+    def set_final_model(self: Self, model: Model) -> None:
+        """Установить модель после тренировки.
 
         Args:
-            name: Имя датасета.
-            x: Входные данные.
-            y: Целевые данные.
-            title: Название для отображения.
+            model: модель после тренировки
         """
-        self._dataset_state = DatasetState(name=name, x=x, y=y, title=title)
-        self.dataset_loaded.emit(self._dataset_state)
+        self._final_model = model
+        self.model_ready.emit(self._final_model)
 
-    def get_dataset_state(self) -> Optional[DatasetState]:
-        """Получить текущее состояние датасета."""
-        return self._dataset_state
-
-    def set_backend(self, backend: str) -> None:
-        """Установить вычислительный backend.
+    def set_comp_graph(self: Self, comp_graph: CompGraph) -> None:
+        """Установить модель после тренировки.
 
         Args:
-            backend: Название backend (PyFloat, NumPy, PyTorch).
+            model: модель после тренировки
         """
-        self._selected_backend = backend
-        self.backend_changed.emit(backend)
+        self._computational_graph = comp_graph
+        self.computational_graph_ready.emit(self._computational_graph)
 
-    def get_backend(self) -> str:
-        """Получить выбранный backend."""
-        return self._selected_backend
-
-    def set_computational_graph(self, comp_graph: Optional[object]) -> None:
-        """Установить вычислительный граф для визуализации.
+    def _on_model_validation_failed(self, error_message: str) -> None:
+        """Обработать ошибку валидации модели.
 
         Args:
-            comp_graph: CompGraph объект из n4 library или None.
+            error_message: Текст сообщения об ошибке.
         """
-        if comp_graph is not None:
-            self.computational_graph_ready.emit(comp_graph)
+        self.append_output(f"Ошибка при загрузке модели: {error_message}")
+        self.error_occurred.emit(error_message)
 
-    def set_training_state(self, state: TrainingState) -> None:
-        """Установить состояние обучения.
+    def _on_dataset_generation_error(self, error_message: str) -> None:
+        """Обработать ошибку при генерации датасета.
 
         Args:
-            state: TrainingState с информацией об обучении.
+            error_message: Текст сообщения об ошибке.
         """
-        self._training_state = state
-        self.training_state_changed.emit(state)
+        self.append_output(f"✗ Ошибка генерации датасета: {error_message}")
+        self.error_occurred.emit(error_message)
 
-    def get_training_state(self) -> TrainingState:
-        """Получить текущее состояние обучения."""
-        return self._training_state
-
-    # Placeholder методы для расширения функциональности
     def save_state(self) -> None:
         """Сохранить состояние приложения на диск."""
         # TODO: Реализовать сохранение состояния
@@ -173,18 +166,9 @@ class Application(QObject):
         # TODO: Реализовать загрузку состояния
         pass
 
-    def configure_backend(self, backend_name: str) -> None:
-        """
-        Настроить вычислительный backend.
-
-        Args:
-            backend_name: Название backend ('float', 'numpy', 'torch' и т.д.)
-        """
-        # TODO: Реализовать переключение backend
-        pass
-
     def reset_state(self) -> None:
         """Сбросить состояние приложения в начальное."""
-        self._model = None
         self._execution_namespace.clear()
         self._output_buffer.clear()
+        self.model_manager.clear_model()
+        self.dataset_manager.clear_dataset()

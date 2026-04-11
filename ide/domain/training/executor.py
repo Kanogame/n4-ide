@@ -1,3 +1,5 @@
+from n4.numeric import PyFloat
+from n4.tensor import Tensor
 import logging
 import time
 from typing import Any, Optional
@@ -81,16 +83,12 @@ class TrainingExecutor:
         start_time = time.time()
         self._collector_repository.clear()
 
+        # Создать экземпляр модели
+        model = model_class()
+        self.logger.info(f"Модель создана: {model_class.__name__}")
+
         try:
             self.logger.info("Инициализация модели и компонентов обучения...")
-
-            # Импортировать необходимые компоненты n4
-            from n4.numeric import PyFloat
-            from n4.tensor import Tensor
-
-            # Создать экземпляр модели
-            model = model_class()
-            self.logger.info(f"Модель создана: {model_class.__name__}")
 
             # Выбрать loss функцию
             loss_fn = config.loss
@@ -224,7 +222,8 @@ class TrainingExecutor:
                 duration_seconds=duration,
                 epochs_completed=epochs_completed,
                 total_samples_processed=total_samples_processed,
-                computational_graph=self._computational_graph,
+                final_model=model,
+                comp_graph=self._computational_graph,
             )
 
         except Exception as e:

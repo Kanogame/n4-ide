@@ -242,8 +242,8 @@ wheels = [
 
 [[package]]
 name = "n4"
-version = "0.3.3"
-source = { git = "https://github.com/kanogame/n4#ee364c7f0b24e9aafbd16dbda3da76f1b2c12bb7" }
+version = "0.3.4"
+source = { git = "https://github.com/kanogame/n4#0f44f2e688eed65c4b70877342b64b14712e9851" }
 dependencies = [
     { name = "graphviz" },
     { name = "pytest" },
@@ -255,6 +255,7 @@ name = "n4-ide"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "graphviz" },
     { name = "matplotlib" },
     { name = "n4" },
     { name = "numpy" },
@@ -265,6 +266,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "graphviz", specifier = ">=0.21" },
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "n4", git = "https://github.com/kanogame/n4" },
     { name = "numpy", specifier = ">=2.4.4" },

@@ -184,18 +184,6 @@ class DirectCollector(Collector):
             value: Скалярное значение (float или преобразуемое в float).
         """
         try:
-            # Логирование для отладки (только первые несколько вызовов)
-            if not hasattr(self, "_logged"):
-                self._logged = 0
-            if self._logged < 3:
-                import logging
-
-                logger = logging.getLogger("trainer")
-                logger.info(
-                    f"DirectCollector.update: type={type(value).__name__}, value={value}, methods={[x for x in dir(value) if x.startswith('get_') or x.startswith('to_')][:5]}"
-                )
-                self._logged += 1
-
             # Попробовать различные способы извлечения числового значения
             if isinstance(value, float):
                 self._current_value = value

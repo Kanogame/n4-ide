@@ -1,8 +1,10 @@
 import sys
 from typing import Callable, Optional, Any
 
+from n4.nn import Model
+
+from ide.domain.execution.redirect import StderrRedirect, StdoutRedirect
 from ide.domain.execution.executor import SafeExecutor
-from ide.domain.execution.redirect import StdoutRedirect, StderrRedirect
 
 
 class ExecutionController:
@@ -65,7 +67,7 @@ class ExecutionController:
             if self._old_stderr:
                 sys.stderr = self._old_stderr
 
-    def extract_and_validate_model(self, env: dict[str, Any]) -> Any:
+    def extract_and_validate_model(self, env: dict[str, Any]) -> type[Model]:
         """
         Найти модель в namespace и проверить её.
 

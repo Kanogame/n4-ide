@@ -1,5 +1,7 @@
 """Модуль для визуализации вычислительных графов и архитектуры сети."""
 
-from .graph_builder import LayersGraphBuilder
+from .base import LayerInfo
+from .computational_graph_builder import ComputationalGraphBuilder
+from .layer_graph_builder import LayersGraphBuilder
 
-__all__ = ["LayersGraphBuilder"]
+__all__ = ["LayerInfo", "LayersGraphBuilder", "ComputationalGraphBuilder"]

@@ -1,4 +1,3 @@
-- Ugly QScintilla
 - Model toolbar with code saving/loading
 - No status icon
 - Training - default task - to classification
@@ -8,5 +7,4 @@
 - Training - log reader - border
 - Metrics - matplotlib - no strech
 - Metrics - matplotlib - epoch plot on sidechart
-- Visulization - no work
-- Useless files in project
+- Visulization - no pan/zoom

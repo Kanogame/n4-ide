@@ -1,3 +1,5 @@
+from n4.core import CompGraph
+from n4.nn import Model
 from dataclasses import dataclass, field
 from typing import Optional, Any, Self
 
@@ -44,7 +46,8 @@ class TrainingResult:
         duration_seconds: Общая длительность обучения в секундах.
         epochs_completed: Количество завершённых эпох.
         total_samples_processed: Общее количество обработанных образцов.
-        computational_graph: Вычислительный граф последней операции (если доступен).
+        comp_graph: Вычислительный граф из последней функции потерь
+        final_model: Модель после обучения
     """
 
     success: bool
@@ -55,7 +58,8 @@ class TrainingResult:
     duration_seconds: float = 0.0
     epochs_completed: int = 0
     total_samples_processed: int = 0
-    computational_graph: Optional[Any] = None
+    final_model: Optional[Model] = None
+    comp_graph: Optional[CompGraph] = None
 
 
 class TrainingExecutorConfig:
