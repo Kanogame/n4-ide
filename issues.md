@@ -1,7 +1,5 @@
 - Ugly QScintilla
 - No status icon
-- Database - splitter - off center
-- Training - splitter - off center
 - Training - default task - to classification
 - Training - default lr - 0.01
 - Training - collectors - style like rest of the system
@@ -10,3 +8,4 @@
 - Metrics - matplotlib - no strech
 - Metrics - matplotlib - epoch plot on sidechart
 - Visulization - no work
+- Useless files in project

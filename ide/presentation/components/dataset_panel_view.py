@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QScrollArea,
     QLineEdit,
+    QFrame,
 )
 from PyQt6.QtCore import pyqtSignal
 
@@ -73,7 +74,7 @@ class DatasetPanelView(QWidget, StyledMixin):
         self.visualizer = DatasetVisualizerWidget()
 
         # Сплиттер для разделения конфигурации и визуализации
-        splitter = HorizontalSplitter(self.left_widget, self.visualizer)
+        splitter = HorizontalSplitter(self.left_widget, self.visualizer, 0.3, 0.7)
         self.main_content.add_widget(splitter)
 
         layout.addWidget(self.main_content)
@@ -102,7 +103,8 @@ class DatasetPanelView(QWidget, StyledMixin):
         """
 
         # Левая панель сплиттера
-        self.left_widget = QWidget()
+        self.left_widget = QFrame()
+        self.left_widget.setObjectName("ParamContainer")
         self.left_layout = create_vertical_layout(self.left_widget)
 
         # Скроллируемая область для параметров
@@ -114,7 +116,6 @@ class DatasetPanelView(QWidget, StyledMixin):
         self.params_container = QWidget()
         self.params_layout = create_vertical_layout(self.params_container, 12)
         self.params_container.setObjectName("DatasetParams")
-        self.params_layout.setObjectName("DatasetParamsLayout")
 
         scroll.setWidget(self.params_container)
         self.left_layout.addWidget(scroll)

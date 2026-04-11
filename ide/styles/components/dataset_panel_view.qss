@@ -1,9 +1,13 @@
 #DatasetScroll {
     border: none;
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0);
+    background-color: #fff;
 }
 
 #DatasetParams {
     background-color: #fff;
+}
+
+#ParamContainer {
+    padding: 10px;
 }

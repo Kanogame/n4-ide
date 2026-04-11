@@ -10,7 +10,13 @@ class HorizontalSplitter(QSplitter, StyledMixin):
     Горизонтальный сплиттер со стилизацией
     """
 
-    def __init__(self: Self, left: QWidget, right: QWidget):
+    def __init__(
+        self: Self,
+        left: QWidget,
+        right: QWidget,
+        left_ratio: float = 0.5,
+        right_ratio: float = 0.5,
+    ) -> None:
         super().__init__(Qt.Orientation.Horizontal)
         self._apply_style("splitter.qss")
         self.setHandleWidth(10)
@@ -21,4 +27,14 @@ class HorizontalSplitter(QSplitter, StyledMixin):
         self.addWidget(left)
         self.addWidget(right)
 
-        self.setSizes([1, 1])
+        self.left_ratio = left_ratio
+        self.rigt_ratio = right_ratio
+
+        self.apply_ratio()
+
+    def apply_ratio(self: Self) -> None:
+        total_width = self.width()
+        left_width = int(total_width * self.left_ratio)
+        right_width = total_width - left_width
+
+        self.setSizes([left_width, right_width])
