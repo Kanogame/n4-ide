@@ -1,0 +1,13 @@
+#Editor {
+    background-color: #FFFFFF;
+    color: #333333;
+    margin: 0px;
+    padding: 0px;
+    border: none;
+}
+
+Editor {
+    border-radius: 6px;
+    border: 1px solid #EAEAEA;
+    padding: 5px;
+}

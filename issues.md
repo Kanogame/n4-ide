@@ -1,4 +1,5 @@
 - Ugly QScintilla
+- Model toolbar with code saving/loading
 - No status icon
 - Training - default task - to classification
 - Training - default lr - 0.01

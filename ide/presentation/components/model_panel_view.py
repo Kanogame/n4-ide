@@ -1,9 +1,3 @@
-from ide.presentation.components.common.panel_view import PanelView, PanelToolbar
-
-import ast
-
-from PyQt6.Qsci import QsciScintilla, QsciLexerPython
-
 from typing import Optional, Self
 from dataclasses import dataclass
 from PyQt6.QtWidgets import (
@@ -11,13 +5,14 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
 )
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QFont, QColor
-
 
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.form_field import FormField
+
+from ide.presentation.components.model_panel.editor import Editor
+from ide.presentation.components.common.panel_view import PanelView, PanelToolbar
 
 
 @dataclass(frozen=True)
@@ -54,7 +49,7 @@ class ModelPanelView(QWidget):
     # Сигнал при изменении выбора вычислительного бекенда.
     backend_changed = pyqtSignal(str)
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self: Self, parent: Optional[QWidget] = None) -> None:
         """Инициализировать панель модели"""
         super().__init__(parent)
 
@@ -71,7 +66,8 @@ class ModelPanelView(QWidget):
         self.create_backend_selector()
 
         # Создать редактор кода
-        self.create_editor()
+        self.editor = Editor()
+        self.main_content.add_widget(self.editor)
 
         # Создать кнопки управления
         self.create_buttons()
@@ -99,38 +95,6 @@ class ModelPanelView(QWidget):
         backend_field = FormField("Вычислительный бекенд", self.backend_combo)
         self.main_content.add_widget(backend_field)
 
-    def create_editor(self: Self) -> None:
-        """Создать редактор кода Python с подсветкой синтаксиса.
-
-        Настраивает подсветку синтаксиса, нумерацию строк, отступы
-        и проверку синтаксиса при изменении текста.
-        """
-        self.editor = QsciScintilla()
-        font = QFont("JetBrains Mono", 11)
-
-        self.editor.setFont(font)
-        self.editor.setMarginType(
-            0,
-            QsciScintilla.MarginType.NumberMargin,
-        )
-        self.editor.setMarginWidth(0, "00000")
-
-        # Установить подсветку синтаксиса Python
-        lexer = QsciLexerPython()
-        lexer.setDefaultFont(font)
-        self.editor.setLexer(lexer)
-
-        # Настроить отступы и автоматическое выравнивание
-        self.editor.setAutoIndent(True)
-        self.editor.setIndentationWidth(4)
-        self.editor.setTabWidth(4)
-
-        # Установить шаблон по умолчанию
-        self.editor.setText(self._default_template())
-        self.editor.textChanged.connect(self._check_syntax)
-
-        self.main_content.add_widget(self.editor)
-
     def create_buttons(self: Self) -> None:
         """Создать кнопки управления панели.
 
@@ -146,31 +110,7 @@ class ModelPanelView(QWidget):
 
         self.main_content.add_layout(buttons_layout)
 
-    def get_model_code(self) -> str:
-        """Получить исходный код модели из редактора.
-
-        Returns:
-            Текст кода модели.
-        """
-        return self.editor.text()
-
-    def set_model_info(self, info: ModelInfo) -> None:
-        """Update model view with new information.
-
-        Args:
-            info: ModelInfo dataclass with model metadata
-        """
-        self._current_model_info = info
-
-        # Update backend selector
-        if info.backend in ["PyFloat", "NumPy", "PyTorch"]:
-            index = self.backend_combo.findText(info.backend)
-            if index >= 0:
-                self.backend_combo.blockSignals(True)
-                self.backend_combo.setCurrentIndex(index)
-                self.backend_combo.blockSignals(False)
-
-    def get_selected_backend(self) -> str:
+    def get_selected_backend(self: Self) -> str:
         """Get currently selected backend.
 
         Returns:
@@ -178,7 +118,7 @@ class ModelPanelView(QWidget):
         """
         return self.backend_combo.currentText()
 
-    def get_current_model_info(self) -> ModelInfo:
+    def get_current_model_info(self: Self) -> ModelInfo:
         """Get current model information.
 
         Returns:
@@ -186,58 +126,10 @@ class ModelPanelView(QWidget):
         """
         return self._current_model_info
 
-    @staticmethod
-    def _default_template() -> str:
-        """Получить шаблон кода модели по умолчанию.
+    def get_model_code(self: Self) -> str:
+        """Получить исходный код модели из редактора.
 
         Returns:
-            Строка с кодом шаблона класса модели.
+            Текст кода модели.
         """
-        return """
-
-class MyModel(Model[PyFloat]):
-    def __init__(self) -> None:
-        self.backend = PyFloat
-        self.model = Sequential(
-            DenseLayer(2, 12, self.backend, Relu),
-            DenseLayer(12, 2, self.backend, NonOp),
-            SoftmaxLayer(self.backend),
-        )
-
-    def forward_pass(self, x: Tensor[PyFloat]) -> Tensor[PyFloat]:
-        return self.model.forward_pass(x)
-
-    def parameters(self):
-        return self.model.parameters()
-
-"""
-
-    def _check_syntax(self) -> bool:
-        """Проверить синтаксис кода Python и выделить ошибки.
-
-        Использует ast.parse() для проверки корректности синтаксиса.
-        При обнаружении ошибок выделяет соответствующую строку
-        красным фоном в редакторе.
-
-        Returns:
-            True если синтаксис корректен, False иначе.
-        """
-        code = self.editor.text()
-
-        try:
-            ast.parse(code)
-            self.editor.markerDeleteAll()
-            return True
-
-        except SyntaxError as e:
-            line = e.lineno - 1 if e.lineno else 0
-
-            marker = self.editor.markerDefine(QsciScintilla.MarkerSymbol.Background)
-
-            self.editor.setMarkerBackgroundColor(
-                QColor("#ff6b6b"),
-                marker,
-            )
-
-            self.editor.markerAdd(line, marker)
-            return False
+        return self.editor.get_model_code()
