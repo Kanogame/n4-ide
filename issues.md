@@ -1,6 +1,5 @@
 - Ugly QScintilla
 - No status icon
-- Navbar wrong order
 - Database - splitter - off center
 - Training - splitter - off center
 - Training - default task - to classification
