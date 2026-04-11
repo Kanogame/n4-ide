@@ -8,8 +8,8 @@ LOSS_REGISTRY: dict[str, type[Loss]] = {
 
 # Маппинг потерь для UI
 PUBLIC_LOSS_MAPPING: dict[str, str] = {
-    "Регрессия": "MSE",
     "Классификация": "CrossEntropy",
+    "Регрессия": "MSE",
 }
 
 

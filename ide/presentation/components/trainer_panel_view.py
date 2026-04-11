@@ -1,9 +1,11 @@
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
 from typing import Optional, Self
 
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
+    QFrame,
 )
 from PyQt6.QtCore import pyqtSignal
 
@@ -19,7 +21,7 @@ from ide.presentation.components.trainer_panel.training_log_reader import (
 )
 
 
-class TrainerPanelView(QWidget):
+class TrainerPanelView(QWidget, StyledMixin):
     """Панель управления обучением нейронной сети.
 
     Signals:
@@ -44,6 +46,7 @@ class TrainerPanelView(QWidget):
             parent: Родительский виджет.
         """
         super().__init__(parent)
+        self._apply_style("trainer_panel_view.qss")
 
         # Основной layout панели
         layout = create_vertical_layout(self)
@@ -76,8 +79,9 @@ class TrainerPanelView(QWidget):
         - Скорость обучения
         - Выбор оптимизатора
         """
-        self.left_widget = QWidget()
+        self.left_widget = QFrame()
         self.left_layout = create_vertical_layout(self.left_widget, 8)
+        self.left_widget.setObjectName("TrainerConfig")
 
         # Создать виджет управления обучением
         self.training_control = TrainingControlWidget()

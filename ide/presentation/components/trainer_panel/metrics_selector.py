@@ -1,6 +1,7 @@
+from ide.presentation.common.layouts import create_vertical_layout
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QLabel
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QLabel, QFrame
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import pyqtSignal
 
@@ -10,10 +11,10 @@ from ide.domain.collectors import (
     is_collector_applicable,
     get_collector_registry,
 )
-from ide.presentation.common.mixins import StyledMixin
+from ide.presentation.common.mixins import FontMixin, StyledMixin
 
 
-class MetricsSelector(QWidget, StyledMixin):
+class MetricsSelector(QFrame, StyledMixin, FontMixin):
     """Виджет для выбора активных сборщиков при обучении.
 
     Отображает список доступных сборщиков для выбранного типа задачи
@@ -36,20 +37,18 @@ class MetricsSelector(QWidget, StyledMixin):
             parent: Родительский виджет.
         """
         super().__init__(parent)
+        self._apply_style("metrics_selector.qss")
+        self._apply_font()
+
         self.setObjectName("MetricsSelector")
 
-        # Применить стиль
-        self._apply_style("metrics_selector.qss")
-
         # Основной layout
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout = create_vertical_layout(self, 8)
 
         # Заголовок
         title = QLabel("Сборщики для отслеживания")
         title_font = QFont("Open Sans", 14)
-        title_font.setWeight(QFont.Weight.Medium)
+        title_font.setWeight(QFont.Weight.Normal)
         title.setFont(title_font)
         title.setObjectName("MetricsSelectorTitle")
         layout.addWidget(title)

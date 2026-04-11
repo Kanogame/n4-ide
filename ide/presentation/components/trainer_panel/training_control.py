@@ -12,7 +12,7 @@ from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.form_field import FormField
-from ide.presentation.components.common.metrics_selector import MetricsSelector
+from ide.presentation.components.trainer_panel.metrics_selector import MetricsSelector
 
 
 class TrainingControlWidget(QWidget):
@@ -70,7 +70,7 @@ class TrainingControlWidget(QWidget):
             max=1.0,
             step=0.00001,
         )
-        self.learning_rate_spinbox.setValue(0.001)
+        self.learning_rate_spinbox.setValue(0.1)
         self.learning_rate_spinbox.value_changed.connect(self._on_config_changed)
         lr_field = FormField("Learning rate", self.learning_rate_spinbox)
         layout.addWidget(lr_field)

@@ -1,10 +1,5 @@
 - Model toolbar with code saving/loading
 - No status icon
-- Training - default task - to classification
-- Training - default lr - 0.01
-- Training - collectors - style like rest of the system
-- Training - log reader - weird buttons
-- Training - log reader - border
-- Metrics - matplotlib - no strech
 - Metrics - matplotlib - epoch plot on sidechart
-- Visulization - no pan/zoom
+- Visualization - no pan/zoom
+- Visualization - comp hang

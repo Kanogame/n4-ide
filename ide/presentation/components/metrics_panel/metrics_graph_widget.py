@@ -1,7 +1,14 @@
 from ide.presentation.common.layouts import create_vertical_layout
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame
+from PyQt6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QFrame,
+    QSizePolicy,
+)
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import pyqtSignal
 
@@ -57,6 +64,9 @@ class MetricsGraphWidget(QFrame, StyledMixin):
             dpi=100,
             parent=self,
         )
+        self.canvas_widget.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         main_layout.addWidget(self.canvas_widget)
 
     def _create_control_panel(self, layout: QVBoxLayout) -> None:
@@ -68,16 +78,6 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         control_layout = QHBoxLayout()
         control_layout.setContentsMargins(16, 12, 16, 0)
         control_layout.setSpacing(16)
-
-        # Заголовок
-        title = QLabel("Графики сборщиков")
-        title_font = QFont("Open Sans", 28)
-        title_font.setWeight(QFont.Weight.Bold)
-        title.setFont(title_font)
-        title.setObjectName("MetricsGraphTitle")
-
-        control_layout.addWidget(title)
-        control_layout.addStretch()
 
         # Выбор сборщика - будет заполнена динамически
         self.collector_combo = ComboBox()

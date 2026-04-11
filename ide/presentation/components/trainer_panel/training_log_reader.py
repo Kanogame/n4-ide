@@ -1,12 +1,14 @@
+from ide.presentation.components.common.button import Button, ButtonStyle
+from ide.presentation.common.layouts import create_vertical_layout
+from ide.presentation.common.mixins import StyledMixin
 import logging
 from typing import Optional, Self
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QVBoxLayout,
     QTextEdit,
     QHBoxLayout,
-    QPushButton,
+    QFrame,
 )
 from PyQt6.QtCore import pyqtSignal, QObject
 from PyQt6.QtGui import QFont, QTextCursor
@@ -39,7 +41,7 @@ class QtLogHandler(QObject, logging.Handler):
             pass
 
 
-class TrainingLogReader(QWidget):
+class TrainingLogReader(QFrame, StyledMixin):
     """Интерактивное поле для отображения логов обучения с копированием.
 
     Компонент отображает вывод обучения модели в прокручиваемой области
@@ -56,10 +58,9 @@ class TrainingLogReader(QWidget):
             parent: Родительский виджет.
         """
         super().__init__(parent)
+        self._apply_style("training_log_reader.qss")
 
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(8)
+        main_layout = create_vertical_layout(self, 8)
 
         # Создать текстовое поле для логов
         self.log_text_edit = QTextEdit()
@@ -67,24 +68,24 @@ class TrainingLogReader(QWidget):
         self.log_text_edit.setObjectName("TrainingLogReader")
 
         # Настроить шрифт для логов
-        font = QFont("JetBrains Mono", 10)
+        font = QFont("Droid Sans Mono", 10)
         self.log_text_edit.setFont(font)
 
         main_layout.addWidget(self.log_text_edit)
 
         # Нижняя панель с кнопками
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setContentsMargins(0, 0, 10, 10)
         button_layout.setSpacing(10)
         button_layout.addStretch()
 
         # Кнопка копирования текста
-        self.copy_button = QPushButton("Копировать")
+        self.copy_button = Button("Копировать")
         self.copy_button.clicked.connect(self._copy_to_clipboard)
         button_layout.addWidget(self.copy_button)
 
         # Кнопка очистки логов
-        self.clear_button = QPushButton("Очистить")
+        self.clear_button = Button("Очистить", ButtonStyle.SECONDARY)
         self.clear_button.clicked.connect(self._clear_logs)
         button_layout.addWidget(self.clear_button)
 

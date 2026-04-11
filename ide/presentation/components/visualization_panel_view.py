@@ -1,5 +1,4 @@
-from graphviz import Digraph
-from n4.nn import Sequential, Model
+from n4.nn import Model
 from n4.core import CompGraph
 from enum import Enum, auto
 from typing import Optional, Self
