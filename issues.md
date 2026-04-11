@@ -1,5 +1,5 @@
-- Model toolbar with code saving/loading
-- No status icon
-- Metrics - matplotlib - epoch plot on sidechart
-- Visualization - no pan/zoom
 - Visualization - comp hang
+- Visualization - no pan/zoom
+- No status icon
+- Model toolbar with code saving/loading
+- Metrics - matplotlib - epoch plot on sidechart
