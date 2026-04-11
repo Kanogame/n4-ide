@@ -11,7 +11,6 @@ from ide.domain.training.models import (
     TrainingExecutorConfig,
 )
 
-
 from ide.presentation.components.trainer_panel.training_log_reader import (
     QtLogHandler,
 )
@@ -91,17 +90,17 @@ class TrainingWorkerThread(QThread):
         except Exception as e:
             self.error.emit(f"Неожиданная ошибка: {str(e)}")
 
-    def pause(self) -> None:
-        """Поставить обучение на паузу."""
-        self.executor.pause_training()
-
-    def resume(self) -> None:
-        """Продолжить обучение."""
-        self.executor.resume_training()
-
     def stop(self) -> None:
         """Остановить обучение."""
         self.executor.stop_training()
+
+    def get_collector_repository(self):
+        """Получить хранилище сборщиков метрик.
+
+        Returns:
+            CollectorRepository с данными о собранных метриках.
+        """
+        return self.executor.get_collector_repository()
 
 
 class TrainingController:
@@ -158,20 +157,20 @@ class TrainingController:
         # Запустить поток
         self.current_training_thread.start()
 
-    def pause_current(self) -> None:
-        """Поставить текущее обучение на паузу."""
-        if self.current_training_thread is not None:
-            self.current_training_thread.pause()
-
-    def resume_current(self) -> None:
-        """Продолжить текущее обучение."""
-        if self.current_training_thread is not None:
-            self.current_training_thread.resume()
-
     def stop_current(self) -> None:
         """Остановить текущее обучение."""
         if self.current_training_thread is not None:
             self.current_training_thread.stop()
+
+    def get_collector_repository(self):
+        """Получить хранилище сборщиков метрик из текущего потока обучения.
+
+        Returns:
+            CollectorRepository с данными о собранных метриках, или None если обучение не запущено.
+        """
+        if self.current_training_thread is not None:
+            return self.current_training_thread.get_collector_repository()
+        return None
 
     def is_training(self) -> bool:
         """Проверить идёт ли в данный момент обучение.

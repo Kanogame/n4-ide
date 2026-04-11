@@ -1,9 +1,8 @@
-from n4.tensor import Tensor
-from ide.domain.collectors.base import Collector, CollectorMode
+from ide.domain.collectors.base import AccumulativeCollector
 
 
-class F1Score(Collector):
-    """Метрика F1-мера (F1-Score).
+class F1Score(AccumulativeCollector):
+    """Сборщик метрики F1-мера (F1-Score).
 
     Режим: ACCUMULATIVE - накапливает true positives, false positives, false negatives.
     Подходит для бинарной классификации и дисбалансированных датасетов.
@@ -12,18 +11,26 @@ class F1Score(Collector):
     """
 
     def __init__(self, positive_class: int = 1) -> None:
-        """Инициализировать метрику F1Score.
+        """Инициализировать сборщик F1Score.
 
         Args:
             positive_class: Индекс класса, считающегося положительным (по умолчанию 1).
         """
-        super().__init__(mode=CollectorMode.ACCUMULATIVE)
+        super().__init__()
         self.positive_class = positive_class
         self._true_positives: int = 0
         self._false_positives: int = 0
         self._false_negatives: int = 0
 
-    def update(self, predictions: Tensor, targets: Tensor) -> None:
+    def get_name(self) -> str:
+        """Получить уникальное имя сборщика.
+
+        Returns:
+            Имя сборщика: "f1_score".
+        """
+        return "f1_score"
+
+    def update(self, predictions, targets) -> None:
         """Обновить состояние с новыми предсказаниями.
 
         Args:
@@ -31,20 +38,16 @@ class F1Score(Collector):
             targets: Целевые значения.
         """
         try:
-            pred_list = predictions.to_list()
-            target_list = targets.to_list()
+            pred_list = self._tensor_to_list(predictions)
+            target_list = self._tensor_to_list(targets)
 
             if len(pred_list) != len(target_list):
                 return
 
             for pred, target in zip(pred_list, target_list):
-                # Определить предсказанный класс
-                if isinstance(pred, (list, tuple)):
-                    pred_class = pred.index(max(pred)) if pred else 0
-                else:
-                    pred_class = int(pred)
-
-                target_class = int(target)
+                # Определить предсказанный класс и целевой класс
+                pred_class = self._to_class_index(pred)
+                target_class = self._to_class_index(target)
 
                 # Подсчитать TP, FP, FN
                 if (
@@ -95,7 +98,7 @@ class F1Score(Collector):
         return 2 * (precision * recall) / (precision + recall)
 
     def reset(self) -> None:
-        """Сбросить состояние для новой эпохи."""
+        """Сбросить состояние сборщика для новой эпохи."""
         self._true_positives = 0
         self._false_positives = 0
         self._false_negatives = 0

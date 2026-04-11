@@ -5,7 +5,6 @@ from typing import Any
 from ide.domain.training.models import TrainingExecutorConfig, TrainingResult
 from ide.domain.collectors import (
     get_collector_registry,
-    CollectorRegistry,
     CollectorRepository,
 )
 
@@ -25,7 +24,6 @@ class TrainingExecutor:
         """Инициализировать исполнитель обучения."""
         self.logger = self._setup_logger()
         self._is_running = False
-        self._is_paused = False
         self._collector_repository: CollectorRepository = CollectorRepository()
 
     @staticmethod
@@ -97,15 +95,15 @@ class TrainingExecutor:
             self.logger.info(f"Loss функция: {loss_fn.__class__.__name__}")
 
             # Создать оптимизатор
-            optimizer = config.optimizer(model.parameters(), lr=config.learning_rate)
+            optimizer = config.optimizer(model.parameters(), lr=config.learning_rate)  # type: ignore
             self.logger.info(
                 f"Оптимизатор: {optimizer.__class__.__name__}, lr={config.learning_rate}"
             )
 
-            # Инициализировать метрики
-            metrics = self._initialize_metrics(config.metrics)
+            # Инициализировать сборщики
+            collectors = self._initialize_metrics(config.metrics)
             self.logger.info(
-                f"Активные метрики: {', '.join(m.get_name() for m in metrics)}"
+                f"Активные сборщики: {', '.join(c.get_name() for c in collectors)}"
             )
 
             # Конвертировать данные в Tensor если нужно
@@ -151,9 +149,9 @@ class TrainingExecutor:
                 epoch_start_time = time.time()
                 self._collector_repository.start_epoch(epoch)
 
-                # Сбросить метрики для новой эпохи
-                for metric in metrics:
-                    metric.reset()
+                # Сбросить сборщики для новой эпохи
+                for collector in collectors:
+                    collector.reset()
 
                 # Обнулить градиенты модели
                 model.zero_grad()
@@ -165,14 +163,14 @@ class TrainingExecutor:
                     dataset_y,
                     loss_fn,
                     optimizer,
-                    metrics,
+                    collectors,
                     config.batch_size,
                     epoch,
                     batch_metrics_history,
                 )
 
                 # Собрать метрики эпохи
-                epoch_metrics = self._collect_epoch_metrics(metrics)
+                epoch_metrics = self._collect_epoch_metrics(collectors)
                 epoch_duration = time.time() - epoch_start_time
                 epoch_metrics_history[epoch] = epoch_metrics
 
@@ -197,7 +195,7 @@ class TrainingExecutor:
 
                 # Логировать прогресс
                 metrics_str = ", ".join(
-                    f"{m.get_name()}: {m.compute():.6f}" for m in metrics
+                    f"{c.get_name()}: {c.compute():.6f}" for c in collectors
                 )
                 self.logger.info(
                     f"Эпоха {epoch + 1}/{config.epochs} "
@@ -240,29 +238,28 @@ class TrainingExecutor:
 
         finally:
             self._is_running = False
-            self._is_paused = False
 
-    def _initialize_metrics(self, metrics_config: dict[str, bool]) -> list[Any]:
-        """Инициализировать метрики на основе конфигурации.
+    def _initialize_metrics(self, collectors_config: dict[str, bool]) -> list[Any]:
+        """Инициализировать сборщики на основе конфигурации.
 
         Args:
-            metrics_config: Словарь активных метрик {имя: включена ли}.
+            collectors_config: Словарь активных сборщиков {имя: включен ли}.
 
         Returns:
-            Список инициализированных метрик.
+            Список инициализированных сборщиков.
         """
         registry = get_collector_registry()
-        metrics = []
+        collectors = []
 
-        for metric_name, is_enabled in metrics_config.items():
+        for collector_name, is_enabled in collectors_config.items():
             if is_enabled:
                 try:
-                    metric = registry.create(metric_name)
-                    metrics.append(metric)
+                    collector = registry.create(collector_name)
+                    collectors.append(collector)
                 except KeyError:
-                    self.logger.warning(f"Метрика '{metric_name}' не найдена")
+                    self.logger.warning(f"Сборщик '{collector_name}' не найден")
 
-        return metrics
+        return collectors
 
     def _execute_epoch(
         self,
@@ -271,7 +268,7 @@ class TrainingExecutor:
         dataset_y: Any,
         loss_fn: Any,
         optimizer: Any,
-        metrics: list[Any],
+        collectors: list[Any],
         batch_size: int,
         epoch_index: int,
         batch_metrics_history: dict[int, dict[str, float]],
@@ -284,7 +281,7 @@ class TrainingExecutor:
             dataset_y: Целевые значения.
             loss_fn: Функция потерь.
             optimizer: Оптимизатор.
-            metrics: Список активных метрик.
+            collectors: Список активных сборщиков.
             batch_size: Размер батча.
             epoch_index: Индекс текущей эпохи.
             batch_metrics_history: Словарь для сбора метрик батчей.
@@ -322,16 +319,16 @@ class TrainingExecutor:
             # Обновить параметры
             optimizer.step()
 
-            # Обновить метрики
-            for metric in metrics:
-                if metric.get_name() == "loss":
-                    metric.update(loss_value, batch_y)
+            # Обновить сборщики
+            for collector in collectors:
+                if collector.get_name() == "loss":
+                    collector.update(loss_value)
                 else:
-                    metric.update(predictions, batch_y)
-                metric.set_sample_count(batch_sample_count)
+                    collector.update(predictions, batch_y)
+                collector.set_sample_count(batch_sample_count)
 
             # Собрать метрики батча
-            batch_metrics = {m.get_name(): m.compute() for m in metrics}
+            batch_metrics = {c.get_name(): c.compute() for c in collectors}
             batch_metrics_history[global_batch_index] = batch_metrics
 
             # Записать в хранилище
@@ -341,16 +338,16 @@ class TrainingExecutor:
 
         return batch_count
 
-    def _collect_epoch_metrics(self, metrics: list[Any]) -> dict[str, float]:
-        """Собрать финальные метрики для эпохи.
+    def _collect_epoch_metrics(self, collectors: list[Any]) -> dict[str, float]:
+        """Собрать финальные значения сборщиков для эпохи.
 
         Args:
-            metrics: Список активных метрик.
+            collectors: Список активных сборщиков.
 
         Returns:
-            Словарь с финальными значениями метрик.
+            Словарь со значениями сборщиков.
         """
-        return {m.get_name(): m.compute() for m in metrics}
+        return {c.get_name(): c.compute() for c in collectors}
 
     @staticmethod
     def _get_dataset_size(dataset: Any) -> int:
@@ -372,27 +369,69 @@ class TrainingExecutor:
     def _get_batch(dataset: Any, start_idx: int, end_idx: int) -> Any:
         """Извлечь батч из датасета.
 
+        Для n4.Tensor извлекает отдельные строки с помощью индексации [i].
+        Для других типов пытается использовать slice notation [start:end].
+
         Args:
             dataset: n4.Tensor или другой тип данных.
             start_idx: Начальный индекс батча.
             end_idx: Конечный индекс батча.
 
         Returns:
-            Батч данных.
+            Батч данных того же типа.
         """
+        try:
+            from n4.tensor import Tensor
+
+            if isinstance(dataset, Tensor):
+                # Для n4.Tensor собираем батч из отдельных строк
+                batch_rows = []
+                for i in range(start_idx, min(end_idx, dataset.shape[0])):
+                    batch_rows.append(dataset[i])
+
+                if not batch_rows:
+                    return dataset
+
+                # Объединяем все значения из батча
+                batch_values = []
+                for row in batch_rows:
+                    # Получаем значения из каждой строки
+                    if hasattr(row, "_values"):
+                        batch_values.extend(row._values)
+                    elif hasattr(row, "to_list"):
+                        row_list = row.to_list()
+                        if isinstance(row_list, list):
+                            batch_values.extend(row_list)
+                        else:
+                            batch_values.append(row_list)
+                    else:
+                        # Если это Value
+                        batch_values.append(row)
+
+                # Формируем новую форму батча: (batch_size,) + row_shape
+                batch_size = len(batch_rows)
+                first_row_shape = (
+                    batch_rows[0].shape if hasattr(batch_rows[0], "shape") else ()
+                )
+                if isinstance(first_row_shape, tuple):
+                    new_shape = (batch_size,) + first_row_shape
+                else:
+                    new_shape = (batch_size, first_row_shape)
+
+                # Создаем батч-тензор
+                return Tensor(batch_values, shape=new_shape)
+        except (ImportError, AttributeError, TypeError):
+            # Если что-то не сработает с Tensor, используем fallback
+            pass
+
+        # Fallback для других типов - используем slice notation
         if hasattr(dataset, "__getitem__"):
-            return dataset[start_idx:end_idx]
+            try:
+                return dataset[start_idx:end_idx]
+            except (TypeError, KeyError):
+                pass
+
         return dataset
-
-    def pause_training(self) -> None:
-        """Поставить обучение на паузу."""
-        self._is_paused = True
-        self.logger.info("Обучение поставлено на паузу")
-
-    def resume_training(self) -> None:
-        """Продолжить обучение."""
-        self._is_paused = False
-        self.logger.info("Обучение возобновлено")
 
     def stop_training(self) -> None:
         """Остановить обучение."""
@@ -407,10 +446,10 @@ class TrainingExecutor:
         """
         return self._is_running
 
-    def is_paused(self) -> bool:
-        """Проверить поставлено ли обучение на паузу.
+    def get_collector_repository(self) -> CollectorRepository:
+        """Получить хранилище сборщиков метрик.
 
         Returns:
-            True если обучение на паузе, False иначе.
+            CollectorRepository с данными о собранных метриках.
         """
-        return self._is_paused
+        return self._collector_repository

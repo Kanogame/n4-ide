@@ -127,7 +127,6 @@ class MainWindow(StyledMainWindow):
 
         # Подключить сигналы обучения
         self.trainer.training_started.connect(self._on_training_started)
-        self.trainer.training_paused.connect(self._on_training_paused)
         self.trainer.training_stopped.connect(self._on_training_stopped)
 
         # Подключить сигналы приложения к UI
@@ -319,17 +318,17 @@ class MainWindow(StyledMainWindow):
             if result.final_metrics:
                 for key, value in result.final_metrics.items():
                     self.app.append_output(f"  {key}: {value:.6f}")
+
+            # Получить хранилище сборщиков метрик и передать в панель метрик
+            collector_repository = self.training_controller.get_collector_repository()
+            if collector_repository is not None:
+                self.metrics.set_metrics_storage(collector_repository)
         else:
             self.app.append_output(f"✗ Ошибка обучения: {result.error_message}")
             self.app.error_occurred.emit(result.error_message or "Unknown error")
 
         # Включить кнопку старта
         self.trainer.set_training_enabled(True)
-
-    def _on_training_paused(self) -> None:
-        """Обработчик сигнала паузы обучения."""
-        self.training_controller.pause_current()
-        self.trainer.append_log("Обучение поставлено на паузу")
 
     def _on_training_stopped(self) -> None:
         """Обработчик сигнала остановки обучения."""

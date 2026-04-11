@@ -13,16 +13,17 @@ from ide.presentation.components.common.combobox import ComboBox
 
 
 class MetricsGraphWidget(QFrame, StyledMixin):
-    """Виджет для интерактивного отображения графиков метрик.
+    """Виджет для интерактивного отображения графиков сборщиков.
 
-    Позволяет выбирать метрики для отображения и уровень агрегации
+    Позволяет выбирать сборщики для отображения и уровень детализации
     (по эпохам или по батчам), отображает соответствующий график.
+    В режиме батчей отмечает границы эпох вертикальными линиями.
 
     Signals:
-        metric_changed: Сигнал при изменении выбранной метрики.
+        metric_changed: Сигнал при изменении выбранного сборщика.
     """
 
-    # Сигнал при изменении выбранной метрики
+    # Сигнал при изменении выбранного сборщика
     metric_changed = pyqtSignal(str)
 
     def __init__(
@@ -30,17 +31,17 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         metrics_storage: CollectorRepository,
         parent: Optional[QWidget] = None,
     ) -> None:
-        """Инициализировать виджет графиков метрик.
+        """Инициализировать виджет графиков сборщиков.
 
         Args:
-            metrics_storage: Хранилище метрик для получения данных.
+            metrics_storage: Хранилище сборщиков для получения данных.
             parent: Родительский виджет.
         """
         super().__init__(parent)
         self._apply_style("metrics_graph.qss")
 
         self._metrics_storage = metrics_storage
-        self._current_metric = "loss"
+        self._current_collector = "loss"
         self._current_level = "epoch"
 
         # Основной layout
@@ -69,7 +70,7 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         control_layout.setSpacing(16)
 
         # Заголовок
-        title = QLabel("Графики метрик")
+        title = QLabel("Графики сборщиков")
         title_font = QFont("Open Sans", 28)
         title_font.setWeight(QFont.Weight.Bold)
         title.setFont(title_font)
@@ -78,28 +79,80 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         control_layout.addWidget(title)
         control_layout.addStretch()
 
-        # Выбор метрики
-        self.metric_combo = ComboBox()
-        self.metric_combo.addItems(["loss", "accuracy", "f1_score"])
-        self.metric_combo.value_changed.connect(self._on_metric_changed)
-        self.metric_combo.setObjectName("MetricsGraphMetricCombo")
-        metric_field = FormField("График", self.metric_combo)
+        # Выбор сборщика - будет заполнена динамически
+        self.collector_combo = ComboBox()
+        # Изначально пусто, заполнится при обновлении графика
+        self.collector_combo.value_changed.connect(self._on_collector_changed)
+        self.collector_combo.setObjectName("MetricsGraphCollectorCombo")
+        collector_field = FormField("Сборщик", self.collector_combo)
 
-        control_layout.addWidget(metric_field)
+        control_layout.addWidget(collector_field)
+
+        # Выбор уровня детализации
+        self.level_combo = ComboBox()
+        self.level_combo.addItems(["Эпохи", "Батчи"])
+        self.level_combo.value_changed.connect(self._on_level_changed)
+        self.level_combo.setObjectName("MetricsGraphLevelCombo")
+        level_field = FormField("Детализация", self.level_combo)
+
+        control_layout.addWidget(level_field)
 
         layout.addLayout(control_layout)
 
-    def _on_metric_changed(self) -> None:
-        """Обработчик при изменении выбранной метрики."""
-        self._current_metric = self.metric_combo.currentText()
-        self.metric_changed.emit(self._current_metric)
+    def _on_collector_changed(self) -> None:
+        """Обработчик при изменении выбранного сборщика."""
+        self._current_collector = self.collector_combo.currentText()
+        self.metric_changed.emit(self._current_collector)
         self.update_plot()
 
+    def _on_level_changed(self) -> None:
+        """Обработчик при изменении уровня детализации."""
+        level_text = self.level_combo.currentText()
+        self._current_level = "epoch" if level_text == "Эпохи" else "batch"
+        self.update_plot()
+
+    def _update_collectors_combobox(self) -> None:
+        """Обновить список доступных сборщиков в combobox на основе собранных данных.
+
+        Получает из хранилища список имен всех сборщиков, которые были
+        активны во время обучения, и заполняет combobox только ними.
+        Если текущий сборщик больше недоступен, переключается на первый.
+        """
+        # Получить список всех собранных сборщиков
+        available_collectors = self._metrics_storage.get_collectors_names()
+
+        # Заблокировать сигналы чтобы не вызывать обновление графика
+        self.collector_combo.blockSignals(True)
+
+        # Запомнить текущий выбор
+        current_text = self.collector_combo.currentText()
+
+        # Очистить и заново заполнить combobox
+        self.collector_combo.clear()
+        self.collector_combo.addItems(sorted(available_collectors))
+
+        # Если старый выбор еще доступен, восстановить его
+        if current_text in available_collectors:
+            index = self.collector_combo.findText(current_text)
+            if index >= 0:
+                self.collector_combo.setCurrentIndex(index)
+                self._current_collector = current_text
+        elif available_collectors:
+            # Иначе выбрать первый доступный
+            self.collector_combo.setCurrentIndex(0)
+            self._current_collector = available_collectors[0]
+
+        # Разблокировать сигналы
+        self.collector_combo.blockSignals(False)
+
     def update_plot(self) -> None:
-        """Обновить график на основе выбранной метрики и уровня агрегации."""
+        """Обновить график на основе выбранного сборщика и уровня детализации."""
+        # Обновить доступные сборщики в combobox
+        self._update_collectors_combobox()
+
         # Получить данные из хранилища
-        metric_history = self._metrics_storage.get_metric_history(
-            self._current_metric,
+        collector_history = self._metrics_storage.get_collector_history(
+            self._current_collector,
             level=self._current_level,
         )
 
@@ -107,7 +160,7 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         self.canvas_widget.clear()
 
         # Если нет данных, вывести пустой график
-        if not metric_history:
+        if not collector_history:
             ax = self.canvas_widget.add_subplot(111)
             ax.text(
                 0.5,
@@ -129,13 +182,18 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         ax = self.canvas_widget.add_subplot(111)
 
         # Определить количество шагов для оси X
-        x_values = list(range(len(metric_history)))
-        label_suffix = "эпохи" if self._current_level == "epoch" else "батчи"
+        x_values = list(range(len(collector_history)))
+
+        # Определить подпись оси X
+        if self._current_level == "epoch":
+            label_suffix = "эпохи"
+        else:
+            label_suffix = "батчи"
 
         # Нарисовать линию графика
         ax.plot(
             x_values,
-            metric_history,
+            collector_history,
             linewidth=2.5,
             color="#005FB8",
             marker="o",
@@ -143,26 +201,30 @@ class MetricsGraphWidget(QFrame, StyledMixin):
             markerfacecolor="#005FB8",
             markeredgecolor="white",
             markeredgewidth=1.5,
-            label=self._current_metric,
+            label=self._current_collector,
         )
+
+        # Добавить вертикальные линии границ эпох в режиме батчей
+        if self._current_level == "batch":
+            self._add_epoch_markers(ax)
 
         # Оформить график
         ax.set_xlabel(f"Номер {label_suffix}", fontsize=12, fontweight="normal")
         ax.set_ylabel(
-            self._current_metric.capitalize(), fontsize=12, fontweight="normal"
+            self._current_collector.capitalize(), fontsize=12, fontweight="normal"
         )
         ax.set_title(
-            f"График метрики {self._current_metric} (по {label_suffix})",
+            f"График сборщика {self._current_collector} (по {label_suffix})",
             fontsize=14,
             fontweight="normal",
         )
         ax.grid(True, alpha=0.3, linestyle="--", linewidth=0.5)
-        ax.set_facecolor("rgba(255, 255, 255, 0.70)")
+        ax.set_facecolor((1.0, 1.0, 1.0, 0.70))
 
         # Установить минимальные значения осей
-        if metric_history:
-            min_val = min(metric_history)
-            max_val = max(metric_history)
+        if collector_history:
+            min_val = min(collector_history)
+            max_val = max(collector_history)
             margin = (max_val - min_val) * 0.1 if max_val != min_val else 0.5
             ax.set_ylim(min_val - margin, max_val + margin)
 
@@ -172,15 +234,46 @@ class MetricsGraphWidget(QFrame, StyledMixin):
         # Перерисовать холст
         self.canvas_widget.draw_plot()
 
-    def set_selected_metric(self, metric_name: str) -> None:
-        """Установить выбранную метрику.
+    def _add_epoch_markers(self, ax) -> None:
+        """Добавить вертикальные линии, обозначающие границы эпох.
 
         Args:
-            metric_name: Имя метрики для отображения.
+            ax: Объект matplotlib axis для рисования.
         """
-        index = self.metric_combo.findText(metric_name)
+        # Получить информацию о границах эпох из батчей
+        batch_records = self._metrics_storage.get_all_batch_records()
+
+        if not batch_records:
+            return
+
+        # Найти индексы первого батча каждой эпохи
+        epoch_boundaries = []
+        current_epoch = -1
+
+        for record in batch_records:
+            if record.epoch_index != current_epoch:
+                epoch_boundaries.append(record.batch_index)
+                current_epoch = record.epoch_index
+
+        # Нарисовать вертикальные линии на границах эпох (кроме первой)
+        for boundary_idx in epoch_boundaries[1:]:
+            ax.axvline(
+                x=boundary_idx - 0.5,
+                color="red",
+                linestyle=":",
+                linewidth=1.5,
+                alpha=0.6,
+            )
+
+    def set_selected_collector(self, collector_name: str) -> None:
+        """Установить выбранный сборщик.
+
+        Args:
+            collector_name: Имя сборщика для отображения.
+        """
+        index = self.collector_combo.findText(collector_name)
         if index >= 0:
-            self.metric_combo.setCurrentIndex(index)
+            self.collector_combo.setCurrentIndex(index)
 
     def refresh(self) -> None:
         """Обновить график с текущими данными."""

@@ -29,10 +29,10 @@ class CollectorRepository:
         self._current_batch_index = 0
 
     def record_batch(self, collectors: dict[str, float], sample_count: int) -> None:
-        """Записать сборщики для батча.
+        """Записать значения сборщиков для батча.
 
         Args:
-            сборщики: Словарь с метриками батча.
+            collectors: Словарь со значениями сборщиков батча.
             sample_count: Количество образцов в батче.
         """
         record = BatchCollectorRecord(
@@ -49,14 +49,14 @@ class CollectorRepository:
         collectors: dict[str, float],
         duration_seconds: float = 0.0,
     ) -> EpochCollectorRecord:
-        """Завершить текущую эпоху и записать агрегированные сборщики.
+        """Завершить текущую эпоху и записать агрегированные значения сборщиков.
 
         Args:
-            collectors: Агрегированные метрики эпохи.
+            collectors: Словарь со значениями сборщиков эпохи.
             duration_seconds: Время выполнения эпохи.
 
         Returns:
-            EpochMetricsRecord с записанными метриками.
+            EpochCollectorRecord с записанными значениями.
         """
         # Подсчитать количество батчей и образцов в текущей эпохе
         epoch_batches = [
@@ -76,13 +76,13 @@ class CollectorRepository:
         return record
 
     def get_batch_record(self, batch_index: int) -> Optional[BatchCollectorRecord]:
-        """Получить запись метрик для конкретного батча.
+        """Получить запись сборщиков для конкретного батча.
 
         Args:
             batch_index: Глобальный индекс батча.
 
         Returns:
-            BatchMetricsRecord или None если батч не найден.
+            BatchCollectorRecord или None если батч не найден.
         """
         for record in self._batch_records:
             if record.batch_index == batch_index:
@@ -90,13 +90,13 @@ class CollectorRepository:
         return None
 
     def get_epoch_record(self, epoch_index: int) -> Optional[EpochCollectorRecord]:
-        """Получить запись метрик для конкретной эпохи.
+        """Получить запись сборщиков для конкретной эпохи.
 
         Args:
             epoch_index: Индекс эпохи.
 
         Returns:
-            EpochMetricsRecord или None если эпоха не найдена.
+            EpochCollectorRecord или None если эпоха не найдена.
         """
         for record in self._epoch_records:
             if record.epoch_index == epoch_index:
@@ -112,7 +112,7 @@ class CollectorRepository:
             epoch_index: Индекс эпохи.
 
         Returns:
-            Список BatchMetricsRecord для эпохи.
+            Список BatchCollectorRecord для эпохи.
         """
         return [r for r in self._batch_records if r.epoch_index == epoch_index]
 
@@ -120,7 +120,7 @@ class CollectorRepository:
         """Получить все записи батчей.
 
         Returns:
-            Список всех BatchMetricsRecord в порядке добавления.
+            Список всех BatchCollectorRecord в порядке добавления.
         """
         return self._batch_records.copy()
 
@@ -128,24 +128,37 @@ class CollectorRepository:
         """Получить все записи эпох.
 
         Returns:
-            Список всех EpochMetricsRecord в порядке добавления.
+            Список всех EpochCollectorRecord в порядке добавления.
         """
         return self._epoch_records.copy()
 
-    def get_metric_history(self, metric_name: str, level: str = "epoch") -> list[float]:
-        """Получить историю значений метрики.
+    def get_collectors_names(self) -> list[str]:
+        """Получить список доступных сборщиков из всех эпох.
+
+        Returns:
+            Список уникальных имён сборщиков.
+        """
+        collectors_set: set[str] = set()
+        for record in self._epoch_records:
+            collectors_set.update(record.collectors.keys())
+        return sorted(list(collectors_set))
+
+    def get_collector_history(
+        self, collector_name: str, level: str = "epoch"
+    ) -> list[float]:
+        """Получить историю значений сборщика.
 
         Args:
-            metric_name: Имя метрики.
+            collector_name: Имя сборщика.
             level: Уровень агрегации ("batch" или "epoch").
 
         Returns:
-            Список значений метрики в порядке хронологии.
+            Список значений сборщика в порядке хронологии.
         """
         if level == "epoch":
-            return [r.get_metric(metric_name) or 0.0 for r in self._epoch_records]
+            return [r.get_collector(collector_name) or 0.0 for r in self._epoch_records]
         elif level == "batch":
-            return [r.get_metric(metric_name) or 0.0 for r in self._batch_records]
+            return [r.get_collector(collector_name) or 0.0 for r in self._batch_records]
         else:
             raise ValueError(f"Неизвестный уровень: {level}")
 

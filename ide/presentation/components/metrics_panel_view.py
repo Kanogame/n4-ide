@@ -35,16 +35,18 @@ class MetricsPanelView(QWidget):
     def __init__(
         self,
         parent: Optional[QWidget] = None,
+        metrics_storage: Optional[CollectorRepository] = None,
     ) -> None:
-        """Инициализировать панель метрик
+        """Инициализировать панель метрик.
 
         Args:
-            parent: Родительский виджет
+            parent: Родительский виджет.
+            metrics_storage: Хранилище метрик (если None, создается новое).
         """
         super().__init__(parent)
 
-        # Инициализировать хранилище если не передано
-        self._metrics_storage = CollectorRepository()
+        # Использовать переданное хранилище или создать новое
+        self._metrics_storage = metrics_storage or CollectorRepository()
 
         # Основной layout панели
         layout = create_vertical_layout(self)
@@ -58,3 +60,13 @@ class MetricsPanelView(QWidget):
         self.main_content.add_widget(self.metrics_graph)
 
         layout.addWidget(self.main_content)
+
+    def set_metrics_storage(self, storage: CollectorRepository) -> None:
+        """Установить хранилище метрик и обновить график.
+
+        Args:
+            storage: Новое хранилище метрик для использования.
+        """
+        self._metrics_storage = storage
+        self.metrics_graph._metrics_storage = storage
+        self.metrics_graph.refresh()

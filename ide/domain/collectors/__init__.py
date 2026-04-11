@@ -14,7 +14,6 @@ __all__ = [
     "Loss",
     "CollectorRegistry",
     "get_collector_registry",
-    "register_metric",
     "CollectorRepository",
     "BatchCollectorRecord",
     "EpochCollectorRecord",
@@ -22,14 +21,14 @@ __all__ = [
 
 from typing import Dict, Set
 
-# Маппинг типов задач на доступные метрики
-TASK_TO_METRICS: Dict[str, Set[str]] = {
+# Маппинг типов задач на доступные сборщики
+TASK_TO_COLLECTORS: Dict[str, Set[str]] = {
     "Классификация": {"loss", "accuracy", "f1_score"},
     "Регрессия": {"loss"},
 }
 
-# Метаданные метрик: описание, единицы измерения и т.д.
-METRIC_METADATA: Dict[str, Dict[str, str]] = {
+# Метаданные сборщиков: описание, единицы измерения и т.д.
+COLLECTOR_METADATA: Dict[str, Dict[str, str]] = {
     "loss": {
         "description": "Функция потерь (оптимизируется модель)",
         "unit": "значение",
@@ -45,40 +44,59 @@ METRIC_METADATA: Dict[str, Dict[str, str]] = {
 }
 
 
-def get_metrics_for_task(task_type: str) -> Set[str]:
-    """Получить доступные метрики для типа задачи.
+def get_collectors_for_task(task_type: str) -> Set[str]:
+    """Получить доступные сборщики для типа задачи.
 
     Args:
         task_type: Тип задачи (из PUBLIC_LOSS_MAPPING).
 
     Returns:
-        Множество доступных метрик для этого типа задачи.
+        Множество доступных сборщиков для этого типа задачи.
     """
-    return TASK_TO_METRICS.get(task_type, {"loss"})
+    return TASK_TO_COLLECTORS.get(task_type, {"loss"})
 
 
-def get_metric_description(metric_name: str) -> str:
-    """Получить описание метрики.
+def get_collector_description(collector_name: str) -> str:
+    """Получить описание сборщика.
 
     Args:
-        metric_name: Имя метрики.
+        collector_name: Имя сборщика.
 
     Returns:
-        Описание метрики.
+        Описание сборщика.
     """
-    metadata = METRIC_METADATA.get(metric_name, {})
-    return metadata.get("description", "Неизвестная метрика")
+    metadata = COLLECTOR_METADATA.get(collector_name, {})
+    return metadata.get("description", "Неизвестный сборщик")
 
 
-def is_metric_applicable(metric_name: str, task_type: str) -> bool:
-    """Проверить применима ли метрика для типа задачи.
+def is_collector_applicable(collector_name: str, task_type: str) -> bool:
+    """Проверить применим ли сборщик для типа задачи.
 
     Args:
-        metric_name: Имя метрики.
+        collector_name: Имя сборщика.
         task_type: Тип задачи.
 
     Returns:
-        True если метрика применима, False иначе.
+        True если сборщик применим, False иначе.
     """
-    available_metrics = get_metrics_for_task(task_type)
-    return metric_name in available_metrics
+    available_collectors = get_collectors_for_task(task_type)
+    return collector_name in available_collectors
+
+
+# Инициализировать и зарегистрировать сборщики при импорте
+def _initialize_collectors() -> None:
+    """Зарегистрировать все встроенные сборщики в реестре."""
+    registry = get_collector_registry()
+
+    # Зарегистрировать Loss
+    registry.register("loss", Loss)
+
+    # Зарегистрировать Accuracy
+    registry.register("accuracy", Accuracy)
+
+    # Зарегистрировать F1Score
+    registry.register("f1_score", F1Score)
+
+
+# Выполнить инициализацию при импорте модуля
+_initialize_collectors()
