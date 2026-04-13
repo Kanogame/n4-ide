@@ -242,8 +242,8 @@ wheels = [
 
 [[package]]
 name = "n4"
-version = "0.3.4"
-source = { git = "https://github.com/kanogame/n4#0f44f2e688eed65c4b70877342b64b14712e9851" }
+version = "0.4.0"
+source = { git = "https://github.com/kanogame/n4#559941e9e462bfa26b5485186fbbe1d47a45aced" }
 dependencies = [
     { name = "graphviz" },
     { name = "pytest" },

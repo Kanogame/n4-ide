@@ -1,15 +1,20 @@
-from n4.core import CompGraph
-from ide.domain.datasets import DatasetResult
+from typing import Any, Optional, Self
+from dataclasses import dataclass, field
+
+from PyQt6.QtCore import QObject, pyqtSignal
 
 from n4.nn import Model
+from n4.core import CompGraph
+
+from ide.domain.datasets import DatasetResult
+
 from ide.domain.execution.controller import ExecutionController
 from ide.domain.training.controller import TrainingController
+
 from ide.application.dataset_manager import DatasetManager
 from ide.application.model_manager import ModelManager
 from ide.application.training_manager import TrainingManager
-from dataclasses import dataclass, field
-from typing import Any, Optional, Self
-from PyQt6.QtCore import QObject, pyqtSignal
+from ide.application.state_manager import ApplicationStatus, ApplicationState
 
 
 @dataclass(frozen=True)
@@ -46,18 +51,19 @@ class Application(QObject):
     """
 
     # Сигналы для оповещения об изменениях состояния
-    execution_started = pyqtSignal()
-    execution_finished = pyqtSignal(ExecutionResult)
     output_received = pyqtSignal(str)
-    error_occurred = pyqtSignal(str)
     dataset_loaded = pyqtSignal(DatasetResult)
     backend_changed = pyqtSignal(str)
     computational_graph_ready = pyqtSignal(object)
     model_ready = pyqtSignal(object)
+    status_changed = pyqtSignal(ApplicationStatus)
 
     def __init__(self) -> None:
         """Инициализировать приложение с контроллерами и менеджерами."""
         super().__init__()
+
+        # Состояние приложения
+        self._application_status = ApplicationStatus()
 
         # Инициализировать контроллеры
         self.execution_controller = ExecutionController(
@@ -79,17 +85,38 @@ class Application(QObject):
 
     def _connect_managers(self) -> None:
         """Подключить сигналы менеджеров к сигналам приложения."""
-        # Подключить сигналы модели
+        # Cигналы модели
         self.model_manager.model_validation_failed.connect(
             self._on_model_validation_failed
         )
         self.model_manager.backend_changed.connect(self.backend_changed.emit)
 
-        # Подключить сигналы датасета
+        # Cигналы датасета
         self.dataset_manager.dataset_loaded.connect(self.dataset_loaded.emit)
         self.dataset_manager.dataset_generation_error.connect(
             self._on_dataset_generation_error
         )
+
+        # Сигнал тренера
+        self.training_manager.training_started.connect(
+            lambda: self.set_application_status(ApplicationState.TRAINING)
+        )
+
+        self.training_manager.training_finished.connect(
+            lambda: self.set_application_status(ApplicationState.COMPLETED)
+        )
+
+        self.training_manager.training_error.connect(
+            lambda: self.set_application_status(ApplicationState.ERORRED)
+        )
+
+    def set_application_status(
+        self: Self, new_state: ApplicationState, error: str = ""
+    ):
+        self._application_state = ApplicationStatus(
+            state=new_state, last_error_message=error
+        )
+        self.status_changed.emit(self._application_state)
 
     def append_output(self, text: str) -> None:
         """Добавить текст в буфер вывода.
@@ -139,36 +166,11 @@ class Application(QObject):
         self.computational_graph_ready.emit(self._computational_graph)
 
     def _on_model_validation_failed(self, error_message: str) -> None:
-        """Обработать ошибку валидации модели.
-
-        Args:
-            error_message: Текст сообщения об ошибке.
-        """
-        self.append_output(f"Ошибка при загрузке модели: {error_message}")
-        self.error_occurred.emit(error_message)
+        self._append_error(f"Ошибка генерации датасета: {error_message}")
 
     def _on_dataset_generation_error(self, error_message: str) -> None:
-        """Обработать ошибку при генерации датасета.
+        self._append_error(f"Ошибка генерации датасета: {error_message}")
 
-        Args:
-            error_message: Текст сообщения об ошибке.
-        """
-        self.append_output(f"✗ Ошибка генерации датасета: {error_message}")
-        self.error_occurred.emit(error_message)
-
-    def save_state(self) -> None:
-        """Сохранить состояние приложения на диск."""
-        # TODO: Реализовать сохранение состояния
-        pass
-
-    def load_state(self) -> None:
-        """Загрузить состояние приложения с диска."""
-        # TODO: Реализовать загрузку состояния
-        pass
-
-    def reset_state(self) -> None:
-        """Сбросить состояние приложения в начальное."""
-        self._execution_namespace.clear()
-        self._output_buffer.clear()
-        self.model_manager.clear_model()
-        self.dataset_manager.clear_dataset()
+    def _append_error(self: Self, error_message: str) -> None:
+        self.append_output(error_message)
+        self.set_application_status(ApplicationState.ERORRED, error_message)
