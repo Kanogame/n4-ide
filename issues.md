@@ -1,5 +1,5 @@
 - Visualization - comp hang
 - Visualization - no pan/zoom
-- No status icon
 - Model toolbar with code saving/loading
 - Metrics - matplotlib - epoch plot on sidechart
+- better example
