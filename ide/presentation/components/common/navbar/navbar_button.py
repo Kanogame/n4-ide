@@ -1,7 +1,7 @@
-from typing import Optional, Self
+from typing import Optional
 from PyQt6.QtWidgets import QWidget, QPushButton
 from PyQt6.QtCore import QSize, QRect, Qt
-from PyQt6.QtGui import QIcon, QPainter, QColor, QPaintEvent
+from PyQt6.QtGui import QIcon, QPainter, QColor
 
 from ide.presentation.common.mixins import StyledMixin
 
@@ -12,12 +12,16 @@ class NavBarButton(QPushButton, StyledMixin):
     Кнопка отображает иконку и может находиться в выбранном
     или невыбранном состоянии. При выборе слева отображается
     округлённый квадратный индикатор.
+
+    Поддерживает состояние отключения (disabled), при котором
+    кнопка не реагирует на клики и отображается полупрозрачной.
     """
 
     ICON_SIZE = 16
     INDICATOR_SIZE = 3
     INDICATOR_HEIGHT = 16
     INDICATOR_RADIUS = 3
+    DISABLED_OPACITY = 0.25  # Более субтильное затемнение (было 0.4)
 
     def __init__(
         self,
@@ -43,8 +47,9 @@ class NavBarButton(QPushButton, StyledMixin):
             self.setIcon(QIcon(icon_path))
 
         self._is_selected = False
+        self._is_enabled = True
 
-    def set_selected(self: Self, selected: bool) -> None:
+    def set_selected(self, selected: bool) -> None:
         """Установить состояние выделения кнопки.
 
         При выборе кнопки отображается округлённый квадратный индикатор
@@ -56,7 +61,7 @@ class NavBarButton(QPushButton, StyledMixin):
         self._is_selected = selected
         self.update()
 
-    def is_selected(self: Self) -> bool:
+    def is_selected(self) -> bool:
         """Получить состояние выделения кнопки.
 
         Returns:
@@ -64,18 +69,63 @@ class NavBarButton(QPushButton, StyledMixin):
         """
         return self._is_selected
 
-    def paintEvent(self: Self, a0: Optional[QPaintEvent]) -> None:
-        """
-        Отрисовать кнопку с индикатором выделения.
+    def set_enabled(self, enabled: bool) -> None:
+        """Установить доступность кнопки.
 
-        При выборе отрисовывает округлённый квадратный индикатор на левой стороне кнопки.
-        Аля windows task manager
+        При отключении кнопка становится полупрозрачной и не реагирует
+        на клики. При включении восстанавливается нормальное состояние.
 
         Args:
-            a0 (event): Событие отрисовки PyQt.
+            enabled: True если кнопка доступна, False если отключена.
+        """
+        self._is_enabled = enabled
+        self.setClickable(enabled)
+        self.update()
+
+    def is_enabled(self) -> bool:
+        """Получить состояние доступности кнопки.
+
+        Returns:
+            True если кнопка доступна, False если отключена.
+        """
+        return self._is_enabled
+
+    def setClickable(self, clickable: bool) -> None:
+        """Установить возможность клика по кнопке.
+
+        Args:
+            clickable: True если кнопка можно кликать, False иначе.
+        """
+        self.blockSignals(not clickable)
+        self.setCursor(
+            Qt.CursorShape.PointingHandCursor
+            if clickable
+            else Qt.CursorShape.ForbiddenCursor
+        )
+
+    def paintEvent(self, a0) -> None:
+        """Отрисовать кнопку с индикатором выделения и состоянием отключения.
+
+        При выборе отрисовывает округлённый квадратный индикатор на левой стороне.
+        При отключении применяется полупрозрачность.
+
+        Args:
+            a0: Событие отрисовки PyQt.
         """
         # Вызвать стандартную отрисовку кнопки
         super().paintEvent(a0)
+
+        # Если кнопка отключена, применить полупрозрачность с закруглением
+        if not self._is_enabled:
+            painter = QPainter(self)
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+            painter.setOpacity(self.DISABLED_OPACITY)
+
+            # Нарисовать полупрозрачный слой с закруглением
+            rect = self.rect()
+            painter.fillRect(rect, QColor("#000000"))
+            painter.end()
+            return
 
         # Если кнопка выбрана, отрисовать индикатор
         if self._is_selected:

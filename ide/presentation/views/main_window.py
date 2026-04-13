@@ -11,13 +11,8 @@
 Вся бизнес-логика находится в application слое.
 """
 
-from ide.domain.training.models import TrainingResult
-
-from ide.presentation.components.metrics_panel_view import MetricsPanelView
-from ide.presentation.components.visualization_panel_view import VisualizationPanelView
-from ide.presentation.components.common.navbar_widget import NavBar
-from ide.application.app import Application
 from typing import Any
+
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -25,10 +20,16 @@ from PyQt6.QtWidgets import (
     QStackedWidget,
 )
 
+from ide.domain.training.models import TrainingResult
+from ide.application.app import Application
+from ide.application.error_handler import ErrorHandler
+from ide.application.state_manager import ApplicationState
+from ide.presentation.components.metrics_panel_view import MetricsPanelView
+from ide.presentation.components.visualization_panel_view import VisualizationPanelView
+from ide.presentation.components.common.navbar_widget import NavBar
 from ide.presentation.components.model_panel_view import ModelPanelView
 from ide.presentation.components.dataset_panel_view import DatasetPanelView
 from ide.presentation.components.trainer_panel_view import TrainerPanelView
-
 from ide.presentation.common.mixins import StyledMainWindow
 
 
@@ -36,13 +37,14 @@ class MainWindow(StyledMainWindow):
     """Главное окно приложения.
 
     Содержит навигационную панель слева, а также главную панель с разделами.
-    Все компоненты коммуницируют через сигналы. Управляет только layout
-    и подключением сигналов.
+    Все компоненты коммуницируют через сигналы состояния приложения.
+    Управляет только layout и подключением сигналов.
 
     Attributes:
         app: Центральное приложение (Application).
         navbar: Навигационная панель.
         stacked: QStackedWidget для переключения разделов.
+        error_handler: Обработчик ошибок приложения.
     """
 
     def __init__(self) -> None:
@@ -55,7 +57,13 @@ class MainWindow(StyledMainWindow):
         # Инициализировать Application слой
         self.app = Application()
 
+        # Инициализировать обработчик ошибок
+        self.error_handler = ErrorHandler(parent_widget=self)
+
         self._build_ui()
+
+        # Подключить основные сигналы приложения
+        self._connect_app_signals()
 
     def _build_ui(self) -> None:
         """Собрать главный интерфейс."""
@@ -79,10 +87,12 @@ class MainWindow(StyledMainWindow):
     def _setup_navbar(self) -> None:
         """Настроить навигационную панель.
 
-        Создает и подключает navbar для переключения между разделами.
+        Создает и подключает navbar для переключения между разделами
+        и управления состоянием доступности кнопок.
         """
         self.navbar = NavBar()
         self.navbar.item_clicked.connect(self._on_navbar_item_clicked)
+        self.navbar.set_error_callback(self.error_handler.show_last_error)
 
         # Устанавливаем редактор кода как начальный раздел
         self.navbar.set_selected_item_by_id("code")
@@ -150,6 +160,33 @@ class MainWindow(StyledMainWindow):
         # Подключить сигналы приложения к логам обучения
         self.app.output_received.connect(self.trainer.append_log)
 
+    def _connect_app_signals(self) -> None:
+        """Подключить сигналы приложения к обработчикам состояния.
+
+        Это главная точка синхронизации состояния между Application,
+        NavBar, ErrorHandler и другими компонентами.
+        """
+        # Главный сигнал состояния
+        self.app.status_changed.connect(self._on_status_changed)
+
+        # Обработчик ошибок
+        self.app.status_changed.connect(self.error_handler.on_status_changed)
+
+    def _on_status_changed(self, status) -> None:
+        """Обработчик изменения состояния приложения.
+
+        Обновляет NavBar, кнопки и другие элементы UI в зависимости
+        от нового состояния.
+
+        Args:
+            status: ApplicationStatus с новым состоянием.
+        """
+        # Обновить иконку статуса в navbar
+        self.navbar.update_status_icon(status)
+
+        # Обновить доступность кнопок требующих TRAINED
+        self.navbar.update_button_availability(status.state)
+
     def _on_navbar_item_clicked(self, item_id: str) -> None:
         """Обработчик сигнала нажатия кнопки navbar.
 
@@ -168,7 +205,8 @@ class MainWindow(StyledMainWindow):
         }
 
         # Переключить раздел
-        self.stacked.setCurrentIndex(item_id_mapping[item_id])
+        if item_id in item_id_mapping:
+            self.stacked.setCurrentIndex(item_id_mapping[item_id])
 
     def _on_dataset_generate_requested(self, config: Any) -> None:
         """Обработчик сигнала генерации датасета.
@@ -279,13 +317,14 @@ class MainWindow(StyledMainWindow):
                 self.metrics.set_metrics_storage(collector_repository)
 
             if result.comp_graph is not None:
-                self.app.set_comp_graph(result.comp_graph)
+                # Испустить сигнал для обновления UI
+                self.app.computational_graph_ready.emit(result.comp_graph)
 
             if result.final_model is not None:
-                self.app.set_final_model(result.final_model)
+                # Испустить сигнал для обновления UI
+                self.app.model_ready.emit(result.final_model)
         else:
             self.app.append_output(f"✗ Ошибка обучения: {result.error_message}")
-            self.app.error_occurred.emit(result.error_message or "Unknown error")
 
         # Отметить обучение как завершенное
         self.app.training_manager.mark_training_finished()
@@ -302,9 +341,17 @@ class MainWindow(StyledMainWindow):
     def _on_training_error(self, error_message: str) -> None:
         """Обработчик ошибки во время обучения.
 
+        Пропускает ошибку в application state machine для централизованной обработки.
+
         Args:
             error_message: Сообщение об ошибке.
         """
+        # Пропустить ошибку в app для централизованной обработки и state change
         self.app.append_output(f"✗ Ошибка: {error_message}")
+        self.app._set_status(ApplicationState.ERROR, error_message)
+
+        # Отметить обучение как завершенное
         self.app.training_manager.mark_training_finished()
+
+        # Включить кнопку старта
         self.trainer.set_training_enabled(True)

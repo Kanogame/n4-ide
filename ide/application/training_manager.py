@@ -71,6 +71,13 @@ class TrainingManager(QObject):
         # Логировать начало обучения
         self._log_training_start(config, model_class, on_progress)
 
+        # Создать обёрнутый callback для завершения обучения
+        # чтобы излучить training_finished сигнал
+        def wrapped_on_finished(result):
+            """Обёрнутый callback для завершения обучения."""
+            on_finished(result)
+            self.training_finished.emit(result)
+
         # Запустить обучение
         self._training_controller.start_training(
             model_class=model_class,
@@ -78,7 +85,7 @@ class TrainingManager(QObject):
             dataset_y=dataset_y,
             config=config,
             on_progress=on_progress,
-            on_finished=on_finished,
+            on_finished=wrapped_on_finished,
             on_error=on_error,
         )
 
