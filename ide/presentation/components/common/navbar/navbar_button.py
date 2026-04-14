@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, Self
 from PyQt6.QtWidgets import QWidget, QPushButton
 from PyQt6.QtCore import QSize, QRect, Qt
-from PyQt6.QtGui import QIcon, QPainter, QColor
+from PyQt6.QtGui import QIcon, QPainter, QColor, QPixmap
 
 from ide.presentation.common.mixins import StyledMixin
 
@@ -21,7 +21,7 @@ class NavBarButton(QPushButton, StyledMixin):
     INDICATOR_SIZE = 3
     INDICATOR_HEIGHT = 16
     INDICATOR_RADIUS = 3
-    DISABLED_OPACITY = 0.25  # Более субтильное затемнение (было 0.4)
+    DISABLED_OPACITY = 0.25
 
     def __init__(
         self,
@@ -42,12 +42,27 @@ class NavBarButton(QPushButton, StyledMixin):
         self.setIconSize(QSize(self.ICON_SIZE, self.ICON_SIZE))
         self.setText("")
         self.setToolTip(tooltip)
+        self.setEnabled(True)
+        self._is_selected = False
 
         if icon_path:
-            self.setIcon(QIcon(icon_path))
+            self.icon_path = icon_path
+            self.icon_color = QColor("#000")
+            self.pixmap: QPixmap = QPixmap(self.icon_path)
+            self.setIcon(self.colorize_icon(self.icon_color))
 
-        self._is_selected = False
-        self._is_enabled = True
+    def colorize_icon(self: Self, color: QColor) -> QIcon:
+        """Перекрасить иконку"""
+        colored_pixmap = QPixmap(self.pixmap.size())
+        colored_pixmap.fill(Qt.GlobalColor.transparent)
+
+        painter = QPainter(colored_pixmap)
+        painter.drawPixmap(0, 0, self.pixmap)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        painter.fillRect(colored_pixmap.rect(), color)
+        painter.end()
+
+        return QIcon(colored_pixmap)
 
     def set_selected(self, selected: bool) -> None:
         """Установить состояние выделения кнопки.
@@ -79,6 +94,12 @@ class NavBarButton(QPushButton, StyledMixin):
             enabled: True если кнопка доступна, False если отключена.
         """
         self._is_enabled = enabled
+        if self._is_enabled:
+            self.icon_color = QColor("#000")
+        else:
+            self.icon_color = QColor("#D6D6D6")
+        self.setIcon(self.colorize_icon(self.icon_color))
+
         self.setClickable(enabled)
         self.update()
 
@@ -114,18 +135,6 @@ class NavBarButton(QPushButton, StyledMixin):
         """
         # Вызвать стандартную отрисовку кнопки
         super().paintEvent(a0)
-
-        # Если кнопка отключена, применить полупрозрачность с закруглением
-        if not self._is_enabled:
-            painter = QPainter(self)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.setOpacity(self.DISABLED_OPACITY)
-
-            # Нарисовать полупрозрачный слой с закруглением
-            rect = self.rect()
-            painter.fillRect(rect, QColor("#000000"))
-            painter.end()
-            return
 
         # Если кнопка выбрана, отрисовать индикатор
         if self._is_selected:

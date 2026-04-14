@@ -8,6 +8,10 @@ NavBarButton {
     width: 100%;
 }
 
+#disabled {
+    background-color: #AEAEAE;
+}
+
 NavBarButton:hover {
     background-color: #EAEAEA;
 }
