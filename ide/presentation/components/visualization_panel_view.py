@@ -11,7 +11,7 @@ from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.panel_view import PanelView
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.form_field import FormField
-from ide.presentation.components.visualization_panel import CompGraphViewer
+from ide.presentation.components.visualization_panel import GraphViewer
 from ide.domain.visualization import (
     LayersGraphBuilder,
     ComputationalGraphBuilder,
@@ -32,7 +32,6 @@ class VisualizationState:
     Attributes:
         model: Текущая модель для визуализации.
         comp_graph: Вычислительный граф (если доступен).
-        backend: Выбранный вычислительный бекенд.
         visualization_mode: Текущий режим визуализации ("computational" или "layers").
     """
 
@@ -45,13 +44,16 @@ class VisualizationPanelView(QWidget, StyledMixin):
     """Панель интерактивной визуализации архитектуры и вычислений модели.
 
     Компонент отображает структуру сети двумя способами:
-    - Послойно: каждый слой как отдельный узел с параметрами
-    - Вычислительный граф: операции и промежуточные значения
+    - Послойно: каждый слой как отдельный узел с параметрами.
+    - Вычислительный граф: операции и промежуточные значения.
 
-    Поддерживается pan & zoom
+    Поддерживается:
+    - Панорамирование (средняя кнопка мыши + перетаскивание).
+    - Масштабирование (Ctrl + прокрутка колеса мыши).
+    - Автоматическое подгон размера при загрузке.
 
-    Signals:
-        None (read-only visualization)
+    Сигналы:
+        None (read-only visualization).
     """
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
@@ -63,19 +65,19 @@ class VisualizationPanelView(QWidget, StyledMixin):
         super().__init__(parent)
         self._apply_style("visualization_panel.qss")
 
-        # Состояние панели
+        # Состояние панели.
         self._visualization_state = VisualizationState()
 
-        # Основной layout
+        # Основной layout.
         layout = create_vertical_layout(self)
 
-        # Создать панель с информацией
+        # Создать панель с информацией.
         self.main_content = PanelView("Визуализация модели")
 
-        # Создать селектор режима визуализации
+        # Создать селектор режима визуализации.
         self.create_visualization_mode_selector()
 
-        # Создать граф-визуализатор
+        # Создать граф-визуализатор.
         self.create_graph_viewer()
 
         layout.addWidget(self.main_content)
@@ -84,8 +86,8 @@ class VisualizationPanelView(QWidget, StyledMixin):
         """Создать выпадающий список выбора режима визуализации.
 
         Режимы:
-        - Послойно: Архитектура слоёв модели
-        - Вычислительный граф: Операции и значения из прямого прохода
+        - Послойно: Архитектура слоёв модели.
+        - Вычислительный граф: Операции и значения из прямого прохода.
         """
         self.mode_combo = ComboBox()
         self.mode_combo.addItems(["Послойно", "Вычислительный граф"])
@@ -98,11 +100,12 @@ class VisualizationPanelView(QWidget, StyledMixin):
         """Создать интерактивный граф-визуализатор.
 
         Граф поддерживает:
-        - Масштабирование колесом мыши
-        - Панорамирование средней кнопкой мыши + перетаскивание
-        - Автоматическое подгон размера
+        - Масштабирование (Ctrl + колесо мыши).
+        - Панорамирование (средняя кнопка мыши + перетаскивание).
+        - Автоматическое подгон размера.
+        - Пунктирный фоновый паттерн.
         """
-        self.graph_viewer = CompGraphViewer()
+        self.graph_viewer = GraphViewer()
         self.main_content.add_widget(self.graph_viewer)
 
     def set_model(self: Self, model: Model) -> None:
@@ -120,7 +123,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
                 self.graph_viewer.clear_graph()
                 return
 
-            # Обновить состояние, сохраняя вычислительный граф
+            # Обновить состояние, сохраняя вычислительный граф.
             state = VisualizationState(
                 model=model,
                 comp_graph=self._visualization_state.comp_graph,
@@ -129,7 +132,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
 
             self._visualization_state = state
 
-            # Отобразить текущий режим визуализации
+            # Отобразить текущий режим визуализации.
             self._update_visualization()
 
         except Exception as e:
@@ -143,14 +146,14 @@ class VisualizationPanelView(QWidget, StyledMixin):
             comp_graph: CompGraph объект из n4 library (результат collect_graph).
         """
         try:
-            # Обновить состояние
+            # Обновить состояние.
             self._visualization_state = VisualizationState(
                 model=self._visualization_state.model,
                 comp_graph=comp_graph,
                 visualization_mode=self._visualization_state.visualization_mode,
             )
 
-            # Если активен режим вычислительного графа, обновить отображение
+            # Если активен режим вычислительного графа, обновить отображение.
             self._update_visualization()
 
         except Exception as e:
@@ -162,7 +165,7 @@ class VisualizationPanelView(QWidget, StyledMixin):
         Args:
             mode_name: Название выбранного режима ("Послойно" или "Вычислительный граф").
         """
-        # Преобразовать названиие в константу режима
+        # Преобразовать названиие в константу режима.
         mode_map = {
             "Послойно": VisualizationMode.LAYERS,
             "Вычислительный граф": VisualizationMode.COMPUTATIONAL,
@@ -170,14 +173,14 @@ class VisualizationPanelView(QWidget, StyledMixin):
 
         mode = mode_map.get(mode_name, VisualizationMode.LAYERS)
 
-        # Обновить состояние
+        # Обновить состояние.
         self._visualization_state = VisualizationState(
             model=self._visualization_state.model,
             comp_graph=self._visualization_state.comp_graph,
             visualization_mode=mode,
         )
 
-        # Обновить визуализацию
+        # Обновить визуализацию.
         self._update_visualization()
 
     def _update_visualization(self: Self) -> None:
@@ -214,11 +217,11 @@ class VisualizationPanelView(QWidget, StyledMixin):
             return
 
         try:
-            # Построить граф архитектуры слоёв
+            # Построить граф архитектуры слоёв.
             builder = LayersGraphBuilder(model)
             graph = builder.export_graphviz()
 
-            # Отобразить граф
+            # Отобразить граф.
             self.graph_viewer.set_graph(graph)
         except Exception as e:
             print(f"Ошибка при построении графа слоёв: {e}")
@@ -235,9 +238,9 @@ class VisualizationPanelView(QWidget, StyledMixin):
             self.graph_viewer.clear_graph()
             return
 
-        # Обернуть в построитель для согласованности
+        # Обернуть в построитель для согласованности.
         builder = ComputationalGraphBuilder(comp_graph)
         graph = builder.export_graphviz()
 
-        # Отобразить граф
+        # Отобразить граф.
         self.graph_viewer.set_graph(graph)

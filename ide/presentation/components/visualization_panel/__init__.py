@@ -1,3 +1,3 @@
-from .comp_graph_viewer import CompGraphViewer
+from .graph_viewer import GraphViewer
 
-__all__ = ["CompGraphViewer"]
+__all__ = ["GraphViewer"]
