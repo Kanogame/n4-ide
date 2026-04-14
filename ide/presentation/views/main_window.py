@@ -144,6 +144,17 @@ class MainWindow(StyledMainWindow):
         )
         self.model_view.backend_changed.connect(self.app.model_manager.set_backend)
 
+        # Подключить сигналы файловых операций
+        self.model_view.file_open_requested.connect(self._on_model_file_open_requested)
+        self.model_view.file_save_requested.connect(self._on_model_file_save_requested)
+        self.model_view.file_save_as_requested.connect(
+            self._on_model_file_save_as_requested
+        )
+
+        # Подключить результаты файловых операций к представлению
+        self.app.model_save_finished.connect(self.model_view._on_model_save_result)
+        self.app.model_load_finished.connect(self.model_view._on_model_load_result)
+
         # Подключить сигнал генерации датасета
         self.dataset.generate_requested.connect(self._on_dataset_generate_requested)
 
@@ -355,3 +366,51 @@ class MainWindow(StyledMainWindow):
 
         # Включить кнопку старта
         self.trainer.set_training_enabled(True)
+
+    def _on_model_file_open_requested(self) -> None:
+        """Обработчик запроса открытия файла модели.
+
+        Открывает диалог и передает запрос в приложение.
+        """
+        from PyQt6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Открыть файл модели",
+            "",
+            "Python Files (*.py);;All Files (*)",
+        )
+        if path:
+            self.app.load_model_code(path)
+
+    def _on_model_file_save_requested(self) -> None:
+        """Обработчик запроса сохранения файла модели.
+
+        Сохраняет текущий код в последний использованный файл.
+        """
+        if (
+            hasattr(self.model_view, "_current_file_path")
+            and self.model_view._current_file_path
+        ):
+            code = self.model_view.get_model_code()
+            self.app.save_model_code(self.model_view._current_file_path, code)
+        else:
+            self._on_model_file_save_as_requested()
+
+    def _on_model_file_save_as_requested(self) -> None:
+        """Обработчик запроса сохранения файла модели с выбором пути.
+
+        Открывает диалог и сохраняет файл в выбранное место.
+        """
+        from PyQt6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Сохранить файл модели как...",
+            "model.py",
+            "Python Files (*.py);;All Files (*)",
+        )
+        if path:
+            code = self.model_view.get_model_code()
+            self.app.save_model_code(path, code)
+            self.model_view._current_file_path = path

@@ -1,0 +1,19 @@
+QToolBar#PanelToolbar {
+    background-color: #FAFAFA;
+    border-radius: 8px 0 0 0;
+    border-bottom: #AEAEAE;
+}
+
+QToolButton {
+    background: transparent;
+    border: none;
+    padding: 5px 10px;
+}
+
+QToolButton:hover {
+    background-color: #AEAEAE;
+}
+
+QToolButton:pressed {
+    background-color: #D6D6D6;
+}

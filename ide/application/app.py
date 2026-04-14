@@ -12,6 +12,7 @@ from ide.domain.training.controller import TrainingController
 from ide.application.dataset_manager import DatasetManager
 from ide.application.model_manager import ModelManager
 from ide.application.training_manager import TrainingManager
+from ide.application.file_manager import FileManager
 from ide.application.state_manager import ApplicationStatus, ApplicationState
 
 
@@ -60,6 +61,10 @@ class Application(QObject):
     computational_graph_ready = pyqtSignal(object)
     model_ready = pyqtSignal(object)
 
+    # Сигналы для файловых операций с моделью
+    model_save_finished = pyqtSignal(object)  # FileSaveResult
+    model_load_finished = pyqtSignal(object)  # FileLoadResult
+
     def __init__(self) -> None:
         """Инициализировать приложение с контроллерами и менеджерами."""
         super().__init__()
@@ -77,6 +82,7 @@ class Application(QObject):
         self.model_manager = ModelManager(self.execution_controller)
         self.dataset_manager = DatasetManager()
         self.training_manager = TrainingManager(self.training_controller)
+        self.file_manager = FileManager()
 
         # Буфер вывода и namespace
         self._output_buffer: list[str] = []
@@ -224,3 +230,38 @@ class Application(QObject):
             Граф вычисления или None.
         """
         return self._computational_graph
+
+    def save_model_code(self, file_path: str, code: str) -> None:
+        """Сохранить код модели в файл и эмиттить сигнал результата.
+
+        Использует FileManager для записи кода в файл, затем эмиттит
+        signal model_save_finished с результатом операции.
+
+        Args:
+            file_path: Абсолютный путь к файлу для сохранения.
+            code: Текст кода модели для сохранения.
+        """
+        result = self.file_manager.save_model_code(file_path, code)
+        self.model_save_finished.emit(result)
+
+        if result.success:
+            self.append_output(f"✓ Модель сохранена: {result.file_path}")
+        else:
+            self.append_output(f"✗ Ошибка сохранения модели: {result.error}")
+
+    def load_model_code(self, file_path: str) -> None:
+        """Загрузить код модели из файла и эмиттить сигнал результата.
+
+        Использует FileManager для чтения содержимого файла, затем эмиттит
+        signal model_load_finished с результатом операции.
+
+        Args:
+            file_path: Абсолютный путь к файлу для загрузки.
+        """
+        result = self.file_manager.load_model_code(file_path)
+        self.model_load_finished.emit(result)
+
+        if result.success:
+            self.append_output(f"✓ Модель загружена: {file_path}")
+        else:
+            self.append_output(f"✗ Ошибка загрузки модели: {result.error}")
