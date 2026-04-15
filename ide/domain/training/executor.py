@@ -9,6 +9,7 @@ from ide.domain.collectors import (
     get_collector_registry,
     CollectorRepository,
 )
+from ide.domain.collectors.base import DirectCollector
 
 
 class TrainingExecutor:
@@ -334,7 +335,7 @@ class TrainingExecutor:
 
             # Обновить сборщики
             for collector in collectors:
-                if collector.get_name() == "loss":
+                if isinstance(collector, DirectCollector):
                     collector.update(loss_value)
                 else:
                     collector.update(predictions, batch_y)

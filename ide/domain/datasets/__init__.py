@@ -1,9 +1,13 @@
 from ide.domain.datasets.base import Dataset, DatasetField, DatasetResult, FieldType
-from ide.domain.datasets.xor import XORDataset
+from ide.domain.datasets.xor import XorDataset
+from ide.domain.datasets.twirl import TwirlBordersDataset
+from ide.domain.datasets.linear import LinearRegressionDataset
 
 # Реестр всех доступных датасетов
 DATASET_REGISTRY: dict[str, type[Dataset]] = {
-    "xor": XORDataset,
+    "XOR": XorDataset,
+    "Спиральный": TwirlBordersDataset,
+    "Линейный": LinearRegressionDataset,
 }
 
 
