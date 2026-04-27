@@ -1,10 +1,9 @@
-from .base import Collector, CollectorMode, BatchCollectorRecord, EpochCollectorRecord
+from .base import BatchCollectorRecord, Collector, CollectorMode, EpochCollectorRecord
 from .loss.loss import Loss
-from .registry import CollectorRegistry, get_collector_registry
-from .repository import CollectorRepository
-
 from .metrics.accuracy import Accuracy
 from .metrics.f1_score import F1Score
+from .registry import CollectorRegistry, get_collector_registry
+from .repository import CollectorRepository
 
 __all__ = [
     "Collector",

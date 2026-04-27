@@ -1,7 +1,9 @@
+from typing import Optional
+
+from PyQt6.QtCore import QObject, pyqtSignal
+
 from ide.domain.datasets import DatasetResult
 from ide.domain.datasets.controller import DatasetGenerationWorker
-from typing import Optional
-from PyQt6.QtCore import QObject, pyqtSignal
 
 
 class DatasetManager(QObject):

@@ -1,7 +1,8 @@
 from typing import Self
-from n4.core import CompGraph
 
 from graphviz import Digraph
+from n4.core import CompGraph
+
 from ide.domain.visualization.base import GraphExporter
 
 

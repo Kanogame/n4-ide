@@ -1,17 +1,18 @@
-from ide.presentation.components.common.button import Button, ButtonStyle
-from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.common.mixins import StyledMixin
 import logging
 from typing import Optional, Self
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QTextEdit,
-    QHBoxLayout,
-    QFrame,
-)
-from PyQt6.QtCore import pyqtSignal, QObject
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QFont, QTextCursor
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QTextEdit,
+    QWidget,
+)
+
+from ide.presentation.common.layouts import create_vertical_layout
+from ide.presentation.common.mixins import StyledMixin
+from ide.presentation.components.common.button import Button, ButtonStyle
 
 
 class QtLogHandler(QObject, logging.Handler):

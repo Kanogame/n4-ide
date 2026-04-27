@@ -1,8 +1,9 @@
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
 from n4.core import CompGraph
 from n4.nn import Model
 from n4.numeric import NumericProtocol
-from dataclasses import dataclass, field
-from typing import Optional, Any
 
 from ide.domain.loss import get_loss_by_public_mapping
 from ide.domain.optimizer import get_optimizer_by_name

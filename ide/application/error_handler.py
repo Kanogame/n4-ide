@@ -1,8 +1,9 @@
 from typing import Optional
-from PyQt6.QtWidgets import QMessageBox, QWidget
-from PyQt6.QtCore import pyqtSignal, QObject
 
-from ide.application.state_manager import ApplicationStatus, ApplicationState
+from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtWidgets import QMessageBox, QWidget
+
+from ide.application.state_manager import ApplicationState, ApplicationStatus
 
 
 class ErrorHandler(QObject):

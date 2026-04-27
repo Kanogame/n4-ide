@@ -1,8 +1,9 @@
-from typing import Any
-from PyQt6.QtCore import QThread, pyqtSignal
 from dataclasses import dataclass
+from typing import Any
 
-from ide.domain.datasets import get_dataset_by_name, DatasetResult
+from PyQt6.QtCore import QThread, pyqtSignal
+
+from ide.domain.datasets import DatasetResult, get_dataset_by_name
 
 
 @dataclass(frozen=True)

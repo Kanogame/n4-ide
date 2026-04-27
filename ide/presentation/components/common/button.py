@@ -5,7 +5,7 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QPushButton, QWidget
 
-from ide.presentation.common.mixins import StyledMixin, FontMixin
+from ide.presentation.common.mixins import FontMixin, StyledMixin
 
 
 class ButtonStyle(Enum):

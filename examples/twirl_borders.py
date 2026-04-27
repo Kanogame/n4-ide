@@ -4,7 +4,9 @@ class TwirlBordersModel(Model[PyFloat]):
     Требует глубокой архитектуры с нелинейностями (Tanh).
     """
 
-    def __init__(self, input_dim: int = 2, hidden_dims: list[int] = [32, 64, 32]) -> None:
+    def __init__(
+        self, input_dim: int = 2, hidden_dims: list[int] = [32, 64, 32]
+    ) -> None:
         self.backend = PyFloat
         layers = []
         prev_dim = input_dim

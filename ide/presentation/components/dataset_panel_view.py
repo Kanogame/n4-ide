@@ -1,30 +1,28 @@
-from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
-from typing import Optional, Self, Any
 from dataclasses import dataclass
+from typing import Any, Optional, Self
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QScrollArea,
-    QLineEdit,
-    QFrame,
-)
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLineEdit,
+    QScrollArea,
+    QWidget,
+)
 
-from ide.domain.datasets import DATASET_REGISTRY, get_dataset_by_name
-from ide.domain.datasets import FieldType
-
-from ide.presentation.common.mixins import StyledMixin
+from ide.domain.datasets import DATASET_REGISTRY, FieldType, get_dataset_by_name
 from ide.presentation.common.layouts import create_vertical_layout
+from ide.presentation.common.mixins import StyledMixin
+from ide.presentation.components.common.button import Button, ButtonStyle
+from ide.presentation.components.common.combobox import ComboBox
+from ide.presentation.components.common.double_spinbox import DoubleSpinBox
+from ide.presentation.components.common.form_field import FormField
+from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
 from ide.presentation.components.common.panel_view import PanelView
+from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.dataset_panel.dataset_visualizer import (
     DatasetVisualizerWidget,
 )
-from ide.presentation.components.common.double_spinbox import DoubleSpinBox
-from ide.presentation.components.common.button import Button, ButtonStyle
-from ide.presentation.components.common.combobox import ComboBox
-from ide.presentation.components.common.spinbox import SpinBox
-from ide.presentation.components.common.form_field import FormField
 
 
 @dataclass(frozen=True)

@@ -14,23 +14,23 @@
 from typing import Any
 
 from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
     QHBoxLayout,
     QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
-from ide.domain.training.models import TrainingResult
 from ide.application.app import Application
 from ide.application.error_handler import ErrorHandler
 from ide.application.state_manager import ApplicationState
-from ide.presentation.components.metrics_panel_view import MetricsPanelView
-from ide.presentation.components.visualization_panel_view import VisualizationPanelView
-from ide.presentation.components.common.navbar_widget import NavBar
-from ide.presentation.components.model_panel_view import ModelPanelView
-from ide.presentation.components.dataset_panel_view import DatasetPanelView
-from ide.presentation.components.trainer_panel_view import TrainerPanelView
+from ide.domain.training.models import TrainingResult
 from ide.presentation.common.mixins import StyledMainWindow
+from ide.presentation.components.common.navbar_widget import NavBar
+from ide.presentation.components.dataset_panel_view import DatasetPanelView
+from ide.presentation.components.metrics_panel_view import MetricsPanelView
+from ide.presentation.components.model_panel_view import ModelPanelView
+from ide.presentation.components.trainer_panel_view import TrainerPanelView
+from ide.presentation.components.visualization_panel_view import VisualizationPanelView
 
 
 class MainWindow(StyledMainWindow):

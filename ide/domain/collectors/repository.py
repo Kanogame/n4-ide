@@ -1,5 +1,6 @@
+from typing import Any, Optional
+
 from ide.domain.collectors.base import BatchCollectorRecord, EpochCollectorRecord
-from typing import Optional, Any
 
 
 class CollectorRepository:

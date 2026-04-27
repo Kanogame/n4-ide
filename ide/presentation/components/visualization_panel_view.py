@@ -1,21 +1,21 @@
-from n4.nn import Model
-from n4.core import CompGraph
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Optional, Self
-from dataclasses import dataclass
 
+from n4.core import CompGraph
+from n4.nn import Model
 from PyQt6.QtWidgets import QWidget
 
-from ide.presentation.common.mixins import StyledMixin
+from ide.domain.visualization import (
+    ComputationalGraphBuilder,
+    LayersGraphBuilder,
+)
 from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.components.common.panel_view import PanelView
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.form_field import FormField
+from ide.presentation.components.common.panel_view import PanelView
 from ide.presentation.components.visualization_panel import GraphViewer
-from ide.domain.visualization import (
-    LayersGraphBuilder,
-    ComputationalGraphBuilder,
-)
 
 
 class VisualizationMode(Enum):

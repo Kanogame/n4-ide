@@ -1,9 +1,11 @@
+from typing import Optional
+
 from n4.nn import Model
 from n4.numeric import NumericProtocol
-from typing import Optional
 from PyQt6.QtCore import QObject, pyqtSignal
-from ide.domain.execution.controller import ExecutionController
+
 from ide.domain.backend import get_backend_registry
+from ide.domain.execution.controller import ExecutionController
 
 
 class ModelManager(QObject):
@@ -42,9 +44,7 @@ class ModelManager(QObject):
         self.model_validation_started.emit()
 
         try:
-            namespace = self._execution_controller.run(
-                model_code, self._backend_type
-            )
+            namespace = self._execution_controller.run(model_code, self._backend_type)
 
             model_class = self._execution_controller.extract_and_validate_model(
                 namespace

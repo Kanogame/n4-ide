@@ -1,13 +1,15 @@
-from ide.presentation.common.layouts import create_horizontal_layout
-from PyQt6.QtWidgets import (
-    QWidget,
-    QToolBar,
-    QMenu,
-    QToolButton,
-)
-from PyQt6.QtGui import QAction
+from typing import Optional, Self
+
 from PyQt6.QtCore import pyqtSignal
-from typing import Self, Optional
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import (
+    QMenu,
+    QToolBar,
+    QToolButton,
+    QWidget,
+)
+
+from ide.presentation.common.layouts import create_horizontal_layout
 from ide.presentation.common.mixins import StyledMixin
 
 

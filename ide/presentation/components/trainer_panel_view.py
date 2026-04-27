@@ -1,20 +1,20 @@
-from ide.presentation.common.mixins import StyledMixin
-from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
 from typing import Optional, Self
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QHBoxLayout,
-    QFrame,
-)
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QWidget,
+)
 
 from ide.presentation.common.layouts import create_vertical_layout
-from ide.presentation.components.common.panel_view import PanelView
+from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.button import Button, ButtonStyle
+from ide.presentation.components.common.horizontal_splitter import HorizontalSplitter
+from ide.presentation.components.common.panel_view import PanelView
 from ide.presentation.components.trainer_panel.training_control import (
-    TrainingControlWidget,
     TrainingConfig,
+    TrainingControlWidget,
 )
 from ide.presentation.components.trainer_panel.training_log_reader import (
     TrainingLogReader,

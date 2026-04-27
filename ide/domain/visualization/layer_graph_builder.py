@@ -1,10 +1,10 @@
-from graphviz import Digraph
-
-from n4.nn.layer import Layer
 from typing import Self
-from ide.domain.visualization.base import LayerInfo
-from n4.nn import Sequential, Model
-from ide.domain.visualization.base import GraphExporter
+
+from graphviz import Digraph
+from n4.nn import Model, Sequential
+from n4.nn.layer import Layer
+
+from ide.domain.visualization.base import GraphExporter, LayerInfo
 
 
 class LayersGraphBuilder(GraphExporter):

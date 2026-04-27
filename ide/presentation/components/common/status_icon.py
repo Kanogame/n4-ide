@@ -4,13 +4,13 @@
 и позволяет пользователю просмотреть последнюю ошибку при клике.
 """
 
-from typing import Optional, Callable
 from pathlib import Path
+from typing import Callable, Optional
 
-from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QWidget
 
-from ide.application.state_manager import ApplicationStatus, ApplicationState
+from ide.application.state_manager import ApplicationState, ApplicationStatus
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
 
 

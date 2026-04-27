@@ -1,4 +1,4 @@
-from n4.loss import Loss, MSELoss, CrossEntropyLoss
+from n4.loss import CrossEntropyLoss, Loss, MSELoss
 
 # Реестр всех доступных функций потерь
 LOSS_REGISTRY: dict[str, type[Loss]] = {

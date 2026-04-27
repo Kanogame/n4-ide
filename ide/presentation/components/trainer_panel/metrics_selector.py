@@ -1,16 +1,16 @@
-from ide.presentation.common.layouts import create_vertical_layout
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QLabel, QFrame
-from PyQt6.QtGui import QFont
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QCheckBox, QFrame, QLabel, QVBoxLayout, QWidget
 
 from ide.domain.collectors import (
-    get_collectors_for_task,
     get_collector_description,
-    is_collector_applicable,
     get_collector_registry,
+    get_collectors_for_task,
+    is_collector_applicable,
 )
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.mixins import FontMixin, StyledMixin
 
 

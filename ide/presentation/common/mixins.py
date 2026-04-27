@@ -1,8 +1,8 @@
-from PyQt6.QtGui import QFont
 from pathlib import Path
-
 from typing import Optional, Self
-from PyQt6.QtWidgets import QWidget, QMainWindow
+
+from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QMainWindow, QWidget
 
 
 class StyledMixin:

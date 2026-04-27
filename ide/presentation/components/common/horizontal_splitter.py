@@ -1,8 +1,9 @@
-from PyQt6.QtCore import Qt
-
 from typing import Self
+
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QSizePolicy, QSplitter, QWidget
+
 from ide.presentation.common.mixins import StyledMixin
-from PyQt6.QtWidgets import QSplitter, QWidget, QSizePolicy
 
 
 class HorizontalSplitter(QSplitter, StyledMixin):

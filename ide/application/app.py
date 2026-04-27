@@ -1,20 +1,18 @@
-from typing import Any, Optional
 from dataclasses import dataclass, field
+from typing import Any, Optional
 
+from n4.core import CompGraph
+from n4.nn import Model
+from n4.numeric import NumericProtocol
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from n4.nn import Model
-from n4.core import CompGraph
-from n4.numeric import NumericProtocol
-
+from ide.application.dataset_manager import DatasetManager
+from ide.application.file_manager import FileManager
+from ide.application.model_manager import ModelManager
+from ide.application.state_manager import ApplicationState, ApplicationStatus
+from ide.application.training_manager import TrainingManager
 from ide.domain.execution.controller import ExecutionController
 from ide.domain.training.controller import TrainingController
-
-from ide.application.dataset_manager import DatasetManager
-from ide.application.model_manager import ModelManager
-from ide.application.training_manager import TrainingManager
-from ide.application.file_manager import FileManager
-from ide.application.state_manager import ApplicationStatus, ApplicationState
 
 
 @dataclass(frozen=True)

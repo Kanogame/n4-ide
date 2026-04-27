@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from n4.numeric import NumericProtocol, PyFloat, NumpyFloat, DecimalNum
+from n4.numeric import DecimalNum, NumericProtocol, NumpyFloat, PyFloat
 
 
 @dataclass(frozen=True)

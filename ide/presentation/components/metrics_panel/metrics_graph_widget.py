@@ -1,22 +1,20 @@
-from ide.presentation.common.layouts import create_vertical_layout
 from typing import Optional
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QFrame,
-    QSizePolicy,
-)
-from PyQt6.QtGui import QFont
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ide.domain.collectors import CollectorRepository
-from ide.presentation.components.common.matplotlib_canvas import MatplotlibCanvasWidget
+from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.mixins import StyledMixin
-from ide.presentation.components.common.form_field import FormField
 from ide.presentation.components.common.combobox import ComboBox
+from ide.presentation.components.common.form_field import FormField
+from ide.presentation.components.common.matplotlib_canvas import MatplotlibCanvasWidget
 
 
 class MetricsGraphWidget(QFrame, StyledMixin):

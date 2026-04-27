@@ -1,15 +1,16 @@
-from n4.tensor import Tensor
-from n4.core import Value as _Value
 import logging
 import time
 from typing import Any, Optional
 
-from ide.domain.training.models import TrainingExecutorConfig, TrainingResult
+from n4.core import Value as _Value
+from n4.tensor import Tensor
+
 from ide.domain.collectors import (
-    get_collector_registry,
     CollectorRepository,
+    get_collector_registry,
 )
 from ide.domain.collectors.base import DirectCollector
+from ide.domain.training.models import TrainingExecutorConfig, TrainingResult
 
 
 class TrainingExecutor:

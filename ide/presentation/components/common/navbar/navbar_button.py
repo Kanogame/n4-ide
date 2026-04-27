@@ -1,7 +1,8 @@
 from typing import Optional, Self
-from PyQt6.QtWidgets import QWidget, QPushButton
-from PyQt6.QtCore import QSize, QRect, Qt
-from PyQt6.QtGui import QIcon, QPainter, QColor, QPixmap
+
+from PyQt6.QtCore import QRect, QSize, Qt
+from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PyQt6.QtWidgets import QPushButton, QWidget
 
 from ide.presentation.common.mixins import StyledMixin
 

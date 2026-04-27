@@ -1,10 +1,12 @@
-from ide.domain.training.models import TrainingResult
+from typing import Callable
+
 from n4.nn import Model
 from n4.numeric import NumericProtocol
-from typing import Callable
 from PyQt6.QtCore import QObject, pyqtSignal
-from ide.presentation.components.trainer_panel.training_control import TrainingConfig
+
 from ide.domain.training.controller import TrainingController
+from ide.domain.training.models import TrainingResult
+from ide.presentation.components.trainer_panel.training_control import TrainingConfig
 
 
 class TrainingManager(QObject):

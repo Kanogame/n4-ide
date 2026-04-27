@@ -1,18 +1,16 @@
-from typing import Any, Optional, Callable, Self
+from typing import Any, Callable, Optional, Self
 
-from n4.nn import Model
 from n4.numeric import NumericProtocol
-from PyQt6.QtCore import QThread, pyqtSignal, QObject
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 from ide.domain.training.executor import (
     TrainingExecutor,
 )
 from ide.domain.training.models import (
     TrainingConfig,
-    TrainingResult,
     TrainingExecutorConfig,
+    TrainingResult,
 )
-
 from ide.presentation.components.trainer_panel.training_log_reader import (
     QtLogHandler,
 )

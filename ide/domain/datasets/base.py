@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
 from enum import Enum
+from typing import Any, Optional
 
 
 class FieldType(Enum):

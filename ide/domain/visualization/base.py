@@ -1,7 +1,7 @@
-from graphviz import Digraph
+from abc import ABC, abstractmethod
+from typing import Optional, Self
 
-from typing import Self, Optional
-from abc import abstractmethod, ABC
+from graphviz import Digraph
 
 
 class GraphExporter(ABC):

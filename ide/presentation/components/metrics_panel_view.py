@@ -6,8 +6,8 @@
 
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QWidget
 
 from ide.domain.collectors import CollectorRepository
 from ide.presentation.common.layouts import create_vertical_layout

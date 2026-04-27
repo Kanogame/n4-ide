@@ -1,4 +1,4 @@
-from typing import Type, Optional, Callable
+from typing import Callable, Optional, Type
 
 from ide.domain.collectors.base import Collector
 

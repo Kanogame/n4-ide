@@ -1,13 +1,15 @@
+from typing import Optional, Self
+
+from PyQt6.QtWidgets import (
+    QFrame,
+    QLayout,
+    QWidget,
+)
+
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.panel.panel_content import PanelContent
 from ide.presentation.components.common.panel.panel_toolbar import PanelToolbar
-from PyQt6.QtWidgets import (
-    QWidget,
-    QLayout,
-    QFrame,
-)
-from typing import Self, Optional
 
 
 class PanelView(QFrame, StyledMixin):

@@ -8,19 +8,20 @@
 - Потокового рендеринга SVG для избежания зависания главного потока.
 """
 
-from typing import Optional, Any
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
-from PyQt6.QtSvgWidgets import QGraphicsSvgItem
-from PyQt6.QtSvg import QSvgRenderer
+from typing import Any, Optional
+
+from PyQt6.QtCore import QObject, Qt, QThread, pyqtSignal
 from PyQt6.QtGui import (
-    QPainter,
-    QWheelEvent,
-    QMouseEvent,
-    QPen,
-    QColor,
     QBrush,
+    QColor,
+    QMouseEvent,
+    QPainter,
+    QPen,
+    QWheelEvent,
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
+from PyQt6.QtSvg import QSvgRenderer
+from PyQt6.QtSvgWidgets import QGraphicsSvgItem
+from PyQt6.QtWidgets import QGraphicsScene, QGraphicsView
 
 
 class SvgRenderWorker(QObject):

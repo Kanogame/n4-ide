@@ -1,17 +1,16 @@
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QWidget
 
-from ide.domain.optimizer import OPTIMIZER_REGISTRY
 from ide.domain.loss import PUBLIC_LOSS_MAPPING
+from ide.domain.optimizer import OPTIMIZER_REGISTRY
 from ide.domain.training.models import TrainingConfig
-
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.combobox import ComboBox
-from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.common.double_spinbox import DoubleSpinBox
 from ide.presentation.components.common.form_field import FormField
+from ide.presentation.components.common.spinbox import SpinBox
 from ide.presentation.components.trainer_panel.metrics_selector import MetricsSelector
 
 

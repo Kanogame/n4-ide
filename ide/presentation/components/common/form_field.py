@@ -1,7 +1,7 @@
 from typing import Optional
 
-from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout
 from PyQt6.QtGui import QFont
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 
 class FormField(QWidget):

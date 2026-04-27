@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional, Any
+from typing import Any, Optional
 
 
 class CollectorMode(Enum):

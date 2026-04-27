@@ -1,24 +1,23 @@
-from typing import Optional, Self, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Optional, Self
+
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
-    QWidget,
     QHBoxLayout,
     QMessageBox,
+    QWidget,
 )
-from PyQt6.QtCore import pyqtSignal
 
 from ide.domain.backend import get_backend_registry
-
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.button import Button, ButtonStyle
 from ide.presentation.components.common.combobox import ComboBox
 from ide.presentation.components.common.form_field import FormField
-
+from ide.presentation.components.common.panel_view import PanelToolbar, PanelView
 from ide.presentation.components.model_panel.editor import Editor
-from ide.presentation.components.common.panel_view import PanelView, PanelToolbar
 
 if TYPE_CHECKING:
-    from ide.application.file_manager import FileSaveResult, FileLoadResult
+    from ide.application.file_manager import FileLoadResult, FileSaveResult
 
 
 @dataclass(frozen=True)
@@ -32,7 +31,9 @@ class ModelInfo:
         code: Исходный код модели.
     """
 
-    backend: str = field(default_factory=lambda: get_backend_registry().get_default_display_name())
+    backend: str = field(
+        default_factory=lambda: get_backend_registry().get_default_display_name()
+    )
     layer_count: int = 0
     total_parameters: int = 0
     code: str = ""

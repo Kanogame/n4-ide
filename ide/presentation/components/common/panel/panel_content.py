@@ -1,10 +1,12 @@
+from typing import Optional, Self
+
 from PyQt6.QtWidgets import (
-    QWidget,
-    QLayout,
     QFrame,
     QLabel,
+    QLayout,
+    QWidget,
 )
-from typing import Self, Optional
+
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.mixins import StyledMixin
 

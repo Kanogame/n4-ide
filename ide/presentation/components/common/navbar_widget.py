@@ -4,17 +4,18 @@
 Поддерживает отключение кнопок в зависимости от состояния приложения.
 """
 
-from typing import Optional, Callable
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QFrame
-from PyQt6.QtCore import pyqtSignal
+from typing import Callable, Optional
 
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QWidget
+
+from ide.application.state_manager import ApplicationState
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.common.mixins import StyledMixin
 from ide.presentation.components.common.navbar.nav_item import NavItem, NavItemType
 from ide.presentation.components.common.navbar.navbar_button import NavBarButton
 from ide.presentation.components.common.navbar.navbar_separator import NavBarSeparator
 from ide.presentation.components.common.status_icon import StatusIcon
-from ide.application.state_manager import ApplicationState
 
 
 class NavBar(QFrame, StyledMixin):

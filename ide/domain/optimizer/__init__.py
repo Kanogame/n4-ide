@@ -1,4 +1,4 @@
-from n4.optim import Optimizer, SGD, Adam
+from n4.optim import SGD, Adam, Optimizer
 
 OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
     "SGD": SGD,

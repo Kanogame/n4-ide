@@ -1,10 +1,11 @@
-from typing import Optional, Any, Union, Literal
+from typing import Any, Literal, Optional
+
 import numpy as np
-from PyQt6.QtWidgets import QWidget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
+from matplotlib.figure import Figure
+from PyQt6.QtWidgets import QWidget
 
 from ide.presentation.common.layouts import create_vertical_layout
 

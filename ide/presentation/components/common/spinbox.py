@@ -1,9 +1,9 @@
 from typing import Optional
 
-from PyQt6.QtWidgets import QSpinBox, QWidget
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QSpinBox, QWidget
 
-from ide.presentation.common.mixins import StyledMixin, FontMixin
+from ide.presentation.common.mixins import FontMixin, StyledMixin
 
 
 class SpinBox(QSpinBox, StyledMixin, FontMixin):

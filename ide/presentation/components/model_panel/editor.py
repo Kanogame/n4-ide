@@ -1,9 +1,9 @@
-from PyQt6.QtCore import Qt
 import ast
-from PyQt6.QtGui import QColor, QFont
-from typing import Self, Optional
+from typing import Optional, Self
 
-from PyQt6.Qsci import QsciScintilla, QsciLexerPython
+from PyQt6.Qsci import QsciLexerPython, QsciScintilla
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import QFrame, QWidget
 
 from ide.presentation.common.layouts import create_vertical_layout

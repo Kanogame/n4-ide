@@ -1,11 +1,11 @@
 import sys
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 from n4.nn import Model
 from n4.numeric import NumericProtocol
 
-from ide.domain.execution.redirect import StderrRedirect, StdoutRedirect
 from ide.domain.execution.executor import SafeExecutor
+from ide.domain.execution.redirect import StderrRedirect, StdoutRedirect
 
 
 class ExecutionController:

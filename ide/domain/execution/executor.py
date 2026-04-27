@@ -1,17 +1,36 @@
-from n4.nn import Model
 import ast
 from typing import Any
 
+from n4.nn import Model
 from n4.numeric import NumericProtocol
+
 from ide.domain.backend import get_backend_registry
 
-
 # Список запрещённых модулей для импорта в целях безопасности
-_RESERVED_SANDBOX_NAMES: frozenset[str] = frozenset({
-    "Value", "Op", "Tensor", "Model", "Sequential", "DenseLayer", "ConvLayer",
-    "SoftmaxLayer", "TanhLayer", "MSELoss", "CrossEntropyLoss", "SGD",
-    "Relu", "Tanh", "NonOp", "Add", "Mul", "Div", "Sub", "Pow",
-})
+_RESERVED_SANDBOX_NAMES: frozenset[str] = frozenset(
+    {
+        "Value",
+        "Op",
+        "Tensor",
+        "Model",
+        "Sequential",
+        "DenseLayer",
+        "ConvLayer",
+        "SoftmaxLayer",
+        "TanhLayer",
+        "MSELoss",
+        "CrossEntropyLoss",
+        "SGD",
+        "Relu",
+        "Tanh",
+        "NonOp",
+        "Add",
+        "Mul",
+        "Div",
+        "Sub",
+        "Pow",
+    }
+)
 
 FORBIDDEN_IMPORTS = {
     "os",
@@ -150,19 +169,19 @@ class SafeExecutor:
         """
         try:
             # Импортировать основные компоненты n4
-            from n4.core import Value, Op
-            from n4.tensor import Tensor
+            from n4.core import Op, Value
+            from n4.loss import CrossEntropyLoss, MSELoss
             from n4.nn import (
-                DenseLayer,
                 ConvLayer,
-                SoftmaxLayer,
-                TanhLayer,
+                DenseLayer,
                 Model,
                 Sequential,
+                SoftmaxLayer,
+                TanhLayer,
             )
-            from n4.loss import MSELoss, CrossEntropyLoss
-            from n4.op import Relu, Tanh, NonOp, Add, Mul, Div, Sub, Pow
+            from n4.op import Add, Div, Mul, NonOp, Pow, Relu, Sub, Tanh
             from n4.optim import SGD
+            from n4.tensor import Tensor
 
             # Добавить базовые классы
             safe_globals["Value"] = Value

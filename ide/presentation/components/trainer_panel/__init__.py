@@ -1,10 +1,10 @@
-from ide.presentation.components.trainer_panel.training_log_reader import (
-    TrainingLogReader,
-    QtLogHandler,
-)
 from ide.presentation.components.trainer_panel.training_control import (
-    TrainingControlWidget,
     TrainingConfig,
+    TrainingControlWidget,
+)
+from ide.presentation.components.trainer_panel.training_log_reader import (
+    QtLogHandler,
+    TrainingLogReader,
 )
 
 __all__ = [

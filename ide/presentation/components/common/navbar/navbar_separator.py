@@ -1,6 +1,8 @@
-from ide.presentation.common.mixins import StyledMixin
 from typing import Optional
-from PyQt6.QtWidgets import QWidget, QFrame
+
+from PyQt6.QtWidgets import QFrame, QWidget
+
+from ide.presentation.common.mixins import StyledMixin
 
 
 class NavBarSeparator(QFrame, StyledMixin):
