@@ -41,31 +41,12 @@ class Accuracy(AccumulativeCollector):
             targets: Целевые значения (n4.Tensor, list, или ndarray).
         """
         try:
-            # Логирование для отладки (только в первом батче)
-            if not hasattr(self, "_logged"):
-                self._logged = False
-
             # Конвертировать в списки для сравнения
             pred_list = self._tensor_to_list(predictions)
             target_list = self._tensor_to_list(targets)
 
             if not pred_list or not target_list:
                 return
-
-            if not self._logged:
-                import logging
-
-                logger = logging.getLogger("trainer")
-                logger.info(
-                    f"Accuracy.update: pred_list len={len(pred_list)}, target_list len={len(target_list)}"
-                )
-                logger.info(
-                    f"  pred_list[0] type={type(pred_list[0])}, value={pred_list[0]}"
-                )
-                logger.info(
-                    f"  target_list[0] type={type(target_list[0])}, value={target_list[0]}"
-                )
-                self._logged = True
 
             # Если размеры не совпадают, выйти
             if len(pred_list) != len(target_list):
