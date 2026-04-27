@@ -79,20 +79,23 @@ class Editor(QFrame, StyledMixin):
     def _default_template() -> str:
         """Получить шаблон кода модели по умолчанию.
 
+        T is the backend class injected at execution time (e.g. PyFloat,
+        NumpyFloat). Using T makes the template backend-agnostic.
+
         Returns:
             Строка с кодом шаблона класса модели.
         """
 
-        return """class MyModel(Model[PyFloat]):
+        return """class MyModel(Model[T]):
     def __init__(self) -> None:
-        self.backend = PyFloat
+        self.backend = T
         self.model = Sequential(
             DenseLayer(2, 1, self.backend, Relu),
             DenseLayer(1, 2, self.backend, NonOp),
             SoftmaxLayer(self.backend),
         )
 
-    def forward_pass(self, x: Tensor[PyFloat]) -> Tensor[PyFloat]:
+    def forward_pass(self, x: Tensor[T]) -> Tensor[T]:
         return self.model.forward_pass(x)
 
     def parameters(self):

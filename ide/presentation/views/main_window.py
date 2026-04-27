@@ -287,12 +287,12 @@ class MainWindow(StyledMainWindow):
         # Очистить логи обучения
         self.trainer.clear_logs()
 
-        # Запустить обучение через менеджер обучения
         success = self.app.training_manager.start_training(
             model_class=model_class,
             dataset_x=dataset_x,
             dataset_y=dataset_y,
             config=config,
+            backend_type=self.app.get_backend_type(),
             on_progress=self.trainer.append_log,
             on_finished=self._on_training_finished,
             on_error=self._on_training_error,

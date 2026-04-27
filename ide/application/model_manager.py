@@ -1,7 +1,9 @@
 from n4.nn import Model
+from n4.numeric import NumericProtocol
 from typing import Optional
 from PyQt6.QtCore import QObject, pyqtSignal
 from ide.domain.execution.controller import ExecutionController
+from ide.domain.backend import get_backend_registry
 
 
 class ModelManager(QObject):
@@ -25,7 +27,8 @@ class ModelManager(QObject):
         """
         super().__init__()
         self._model: Optional[type[Model]] = None
-        self._selected_backend: str = "PyFloat"
+        self._registry = get_backend_registry()
+        self._backend_type: type[NumericProtocol] = self._registry.get_default()
         self._execution_controller = execution_controller
 
     def load_model_from_code(self, model_code: str) -> None:
@@ -39,39 +42,52 @@ class ModelManager(QObject):
         self.model_validation_started.emit()
 
         try:
-            # Выполнить код с текущим backend
             namespace = self._execution_controller.run(
-                model_code, self._selected_backend
+                model_code, self._backend_type
             )
 
-            # Извлечь и валидировать класс модели
             model_class = self._execution_controller.extract_and_validate_model(
                 namespace
             )
 
-            # Сохранить модель и emit сигнал
             self._model = model_class
             self.model_loaded.emit(model_class)
 
         except Exception as e:
             self.model_validation_failed.emit(str(e))
 
-    def set_backend(self, backend: str) -> None:
-        """Установить вычислительный backend.
+    def set_backend(self, display_name: str) -> None:
+        """Установить вычислительный backend по отображаемому имени.
 
         Args:
-            backend: Название backend (PyFloat, NumPy, PyTorch).
-        """
-        self._selected_backend = backend
-        self.backend_changed.emit(backend)
+            display_name: Отображаемое имя backend из реестра.
 
-    def get_backend(self) -> str:
-        """Получить выбранный backend.
+        Raises:
+            KeyError: Если backend с таким именем не зарегистрирован.
+        """
+        try:
+            self._backend_type = self._registry.get_class(display_name)
+        except KeyError:
+            self.model_validation_failed.emit(f"Unknown backend: {display_name!r}")
+            return
+        self.backend_changed.emit(display_name)
+
+    def get_backend_type(self) -> type[NumericProtocol]:
+        """Получить класс выбранного backend.
 
         Returns:
-            Название выбранного backend.
+            Класс backend (например PyFloat, NumpyFloat).
         """
-        return self._selected_backend
+        return self._backend_type
+
+    def get_backend_name(self) -> str:
+        """Получить отображаемое имя выбранного backend.
+
+        Returns:
+            Отображаемое имя backend из реестра.
+        """
+        name = self._registry.get_display_name(self._backend_type)
+        return name if name is not None else self._backend_type.__name__
 
     def get_current_model(self) -> Optional[type[Model]]:
         """Получить текущую загруженную модель.

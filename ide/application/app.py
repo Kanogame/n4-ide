@@ -5,6 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 from n4.nn import Model
 from n4.core import CompGraph
+from n4.numeric import NumericProtocol
 
 from ide.domain.execution.controller import ExecutionController
 from ide.domain.training.controller import TrainingController
@@ -214,6 +215,14 @@ class Application(QObject):
             namespace: Новый namespace для сохранения.
         """
         self._execution_namespace = namespace.copy()
+
+    def get_backend_type(self) -> type[NumericProtocol]:
+        """Получить класс текущего вычислительного backend.
+
+        Returns:
+            Класс backend (например PyFloat, NumpyFloat).
+        """
+        return self.model_manager.get_backend_type()
 
     def get_final_model(self) -> Optional[Model]:
         """Получить последнюю тренированную модель.

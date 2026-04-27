@@ -1,7 +1,8 @@
 from n4.core import CompGraph
 from n4.nn import Model
+from n4.numeric import NumericProtocol
 from dataclasses import dataclass, field
-from typing import Optional, Any, Self
+from typing import Optional, Any
 
 from ide.domain.loss import get_loss_by_public_mapping
 from ide.domain.optimizer import get_optimizer_by_name
@@ -62,11 +63,34 @@ class TrainingResult:
     comp_graph: Optional[CompGraph] = None
 
 
+@dataclass(frozen=True)
 class TrainingExecutorConfig:
-    def __init__(self: Self, config: TrainingConfig):
-        self.loss = get_loss_by_public_mapping(config.task_type)
-        self.optimizer = get_optimizer_by_name(config.optimizer)
-        self.epochs = config.epochs
-        self.batch_size = config.batch_size
-        self.learning_rate = config.learning_rate
-        self.metrics = config.metrics
+    """Resolved training configuration passed to TrainingExecutor.
+
+    Created via the `from_training_config` factory which resolves symbolic
+    names (optimizer, loss) to their concrete implementations.
+    """
+
+    loss: Any
+    optimizer: Any
+    epochs: int
+    batch_size: int
+    learning_rate: float
+    metrics: dict[str, bool]
+    backend_type: type[NumericProtocol]
+
+    @classmethod
+    def from_training_config(
+        cls,
+        config: "TrainingConfig",
+        backend_type: type[NumericProtocol],
+    ) -> "TrainingExecutorConfig":
+        return cls(
+            loss=get_loss_by_public_mapping(config.task_type),
+            optimizer=get_optimizer_by_name(config.optimizer),
+            epochs=config.epochs,
+            batch_size=config.batch_size,
+            learning_rate=config.learning_rate,
+            metrics=config.metrics,
+            backend_type=backend_type,
+        )

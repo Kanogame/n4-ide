@@ -1,3 +1,7 @@
 - Metrics - matplotlib - epoch plot on sidechart
 - Run model preview on 1 batch
 - better example
+- Possibly cleaner arch preview
+- Hide scrollbars on preview
+- Implement repository pattern everywhere
+- Clean comments

@@ -2,6 +2,7 @@ import sys
 from typing import Callable, Optional, Any
 
 from n4.nn import Model
+from n4.numeric import NumericProtocol
 
 from ide.domain.execution.redirect import StderrRedirect, StdoutRedirect
 from ide.domain.execution.executor import SafeExecutor
@@ -29,12 +30,12 @@ class ExecutionController:
         self._old_stdout: Optional[Any] = None
         self._old_stderr: Optional[Any] = None
 
-    def run(self, code: str, backend_name: str = "PyFloat") -> dict[str, Any]:
+    def run(self, code: str, backend_type: type[NumericProtocol]) -> dict[str, Any]:
         """Выполнить код с перенаправлением вывода.
 
         Args:
             code: Python код для выполнения
-            backend_name: Название вычислительного backend
+            backend_type: Класс вычислительного backend
 
         Returns:
             Namespace (словарь переменных) из выполненного кода
@@ -53,7 +54,7 @@ class ExecutionController:
         sys.stderr = stderr
 
         try:
-            env = self.executor.execute(code, backend_name=backend_name)
+            env = self.executor.execute(code, backend_type=backend_type)
             return env
 
         except Exception as e:
@@ -62,9 +63,9 @@ class ExecutionController:
 
         finally:
             # Восстановить оригинальные stdout/stderr
-            if self._old_stdout:
+            if self._old_stdout is not None:
                 sys.stdout = self._old_stdout
-            if self._old_stderr:
+            if self._old_stderr is not None:
                 sys.stderr = self._old_stderr
 
     def extract_and_validate_model(self, env: dict[str, Any]) -> type[Model]:

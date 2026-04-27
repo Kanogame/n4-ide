@@ -1,11 +1,13 @@
 from typing import Optional, Self, TYPE_CHECKING
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from PyQt6.QtWidgets import (
     QWidget,
     QHBoxLayout,
     QMessageBox,
 )
 from PyQt6.QtCore import pyqtSignal
+
+from ide.domain.backend import get_backend_registry
 
 from ide.presentation.common.layouts import create_vertical_layout
 from ide.presentation.components.common.button import Button, ButtonStyle
@@ -24,13 +26,13 @@ class ModelInfo:
     """Неизменяемый снимок информации о модели.
 
     Attributes:
-        backend: Имя вычислительного бекенда (по умолчанию "PyFloat").
+        backend: Имя вычислительного бекенда (по умолчанию — первый зарегистрированный).
         layer_count: Количество слоёв в модели.
         total_parameters: Общее количество параметров модели.
         code: Исходный код модели.
     """
 
-    backend: str = "PyFloat"
+    backend: str = field(default_factory=lambda: get_backend_registry().get_default_display_name())
     layer_count: int = 0
     total_parameters: int = 0
     code: str = ""
@@ -221,12 +223,14 @@ class ModelPanelView(QWidget):
     def create_backend_selector(self: Self) -> None:
         """Создать выпадающий список выбора вычислительного бекенда.
 
-        Поддерживаемые бекенды: PyFloat, NumPy, PyTorch.
-        Подключает сигнал изменения на backend_changed.
+        Список бекендов загружается из реестра, что гарантирует соответствие
+        именам, по которым они зарегистрированы.
         """
         self.backend_combo = ComboBox()
-        self.backend_combo.addItems(["PyFloat", "NumPy", "PyTorch"])
+        self.backend_combo.addItems(get_backend_registry().list_display_names())
         self.backend_combo.value_changed.connect(self.backend_changed.emit)
+        # Emit the initial selection so ModelManager stays in sync on construction
+        self.backend_changed.emit(self.backend_combo.currentText())
 
         backend_field = FormField("Вычислительный бекенд", self.backend_combo)
         self.main_content.add_widget(backend_field)

@@ -1,5 +1,5 @@
-from n4.numeric import PyFloat
 from n4.tensor import Tensor
+from n4.core import Value as _Value
 import logging
 import time
 from typing import Any, Optional
@@ -110,9 +110,7 @@ class TrainingExecutor:
             if not isinstance(dataset_x, Tensor):
                 dataset_x = Tensor(
                     [
-                        __import__("n4.core", fromlist=["Value"]).Value.from_float(
-                            float(v), PyFloat
-                        )
+                        _Value.from_float(float(v), config.backend_type)
                         for v in dataset_x.flat
                     ],
                     shape=dataset_x.shape,
@@ -120,9 +118,7 @@ class TrainingExecutor:
             if not isinstance(dataset_y, Tensor):
                 dataset_y = Tensor(
                     [
-                        __import__("n4.core", fromlist=["Value"]).Value.from_float(
-                            float(v), PyFloat
-                        )
+                        _Value.from_float(float(v), config.backend_type)
                         for v in dataset_y.flat
                     ],
                     shape=dataset_y.shape,

@@ -1,5 +1,7 @@
-from typing import Self, Any, Optional, Callable
+from typing import Any, Optional, Callable, Self
 
+from n4.nn import Model
+from n4.numeric import NumericProtocol
 from PyQt6.QtCore import QThread, pyqtSignal, QObject
 
 from ide.domain.training.executor import (
@@ -43,6 +45,7 @@ class TrainingWorkerThread(QThread):
         dataset_x: Any,
         dataset_y: Any,
         config: TrainingConfig,
+        backend_type: type[NumericProtocol],
         parent: Optional[QObject] = None,
     ) -> None:
         """Инициализировать рабочий поток обучения.
@@ -52,6 +55,7 @@ class TrainingWorkerThread(QThread):
             dataset_x: Входные данные датасета.
             dataset_y: Целевые данные датасета.
             config: Конфигурация обучения.
+            backend_type: Класс вычислительного backend.
             parent: Родительский объект Qt.
         """
         super().__init__(parent)
@@ -59,7 +63,7 @@ class TrainingWorkerThread(QThread):
         self.model_class = model_class
         self.dataset_x = dataset_x
         self.dataset_y = dataset_y
-        self.config = TrainingExecutorConfig(config)
+        self.config = TrainingExecutorConfig.from_training_config(config, backend_type)
 
         self.executor = TrainingExecutor()
         self._setup_logging()
@@ -120,6 +124,7 @@ class TrainingController:
         dataset_x: Any,
         dataset_y: Any,
         config: TrainingConfig,
+        backend_type: type[NumericProtocol],
         on_progress: Callable[[str], None],
         on_finished: Callable[[TrainingResult], None],
         on_error: Callable[[str], None],
@@ -131,6 +136,7 @@ class TrainingController:
             dataset_x: Входные данные датасета.
             dataset_y: Целевые данные датасета.
             config: Конфигурация обучения.
+            backend_type: Класс вычислительного backend.
             on_progress: Callback при получении нового лога.
             on_finished: Callback при завершении обучения.
             on_error: Callback при ошибке.
@@ -147,6 +153,7 @@ class TrainingController:
             dataset_x,
             dataset_y,
             config,
+            backend_type,
         )
 
         # Подключить сигналы

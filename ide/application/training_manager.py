@@ -1,5 +1,6 @@
 from ide.domain.training.models import TrainingResult
 from n4.nn import Model
+from n4.numeric import NumericProtocol
 from typing import Callable
 from PyQt6.QtCore import QObject, pyqtSignal
 from ide.presentation.components.trainer_panel.training_control import TrainingConfig
@@ -35,6 +36,7 @@ class TrainingManager(QObject):
         dataset_x,
         dataset_y,
         config: TrainingConfig,
+        backend_type: type[NumericProtocol],
         on_progress: Callable[[str], None],
         on_finished: Callable[[TrainingResult], None],
         on_error: Callable[[str], None],
@@ -49,6 +51,7 @@ class TrainingManager(QObject):
             dataset_x: Входные данные датасета.
             dataset_y: Целевые данные датасета.
             config: Конфигурация параметров обучения.
+            backend_type: Класс вычислительного backend.
             on_progress: Callback для обновления логов прогресса.
             on_finished: Callback для обработки успешного завершения.
             on_error: Callback для обработки ошибок.
@@ -56,34 +59,26 @@ class TrainingManager(QObject):
         Returns:
             True если обучение запущено, False если есть ошибки валидации.
         """
-        # Валидировать модель
         if model_class is None:
-            error_msg = "Ошибка: сначала нужно загрузить модель (раздел 'Модель')"
-            on_error(error_msg)
+            on_error("Ошибка: сначала нужно загрузить модель (раздел 'Модель')")
             return False
 
-        # Валидировать датасет
         if dataset_x is None or dataset_y is None:
-            error_msg = "Ошибка: сначала нужно сгенерировать датасет (раздел 'Датасет')"
-            on_error(error_msg)
+            on_error("Ошибка: сначала нужно сгенерировать датасет (раздел 'Датасет')")
             return False
 
-        # Логировать начало обучения
         self._log_training_start(config, model_class, on_progress)
 
-        # Создать обёрнутый callback для завершения обучения
-        # чтобы излучить training_finished сигнал
         def wrapped_on_finished(result):
-            """Обёрнутый callback для завершения обучения."""
             on_finished(result)
             self.training_finished.emit(result)
 
-        # Запустить обучение
         self._training_controller.start_training(
             model_class=model_class,
             dataset_x=dataset_x,
             dataset_y=dataset_y,
             config=config,
+            backend_type=backend_type,
             on_progress=on_progress,
             on_finished=wrapped_on_finished,
             on_error=on_error,

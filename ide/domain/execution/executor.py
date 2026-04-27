@@ -1,10 +1,18 @@
 from n4.nn import Model
-import typing
 import ast
-from typing import Type, Any
+from typing import Any
+
+from n4.numeric import NumericProtocol
+from ide.domain.backend import get_backend_registry
 
 
 # Список запрещённых модулей для импорта в целях безопасности
+_RESERVED_SANDBOX_NAMES: frozenset[str] = frozenset({
+    "Value", "Op", "Tensor", "Model", "Sequential", "DenseLayer", "ConvLayer",
+    "SoftmaxLayer", "TanhLayer", "MSELoss", "CrossEntropyLoss", "SGD",
+    "Relu", "Tanh", "NonOp", "Add", "Mul", "Div", "Sub", "Pow",
+})
+
 FORBIDDEN_IMPORTS = {
     "os",
     "sys",
@@ -30,7 +38,7 @@ class SafeExecutor:
 
     def __init__(self) -> None:
         """Инициализировать исполнитель."""
-        pass
+        self._registry = get_backend_registry()
 
     def _validate_ast(self, tree: ast.AST) -> None:
         """Проверить AST на запрещённые конструкции.
@@ -65,7 +73,6 @@ class SafeExecutor:
 
     ALLOWED_MODULES = {
         "typing",
-        # Add other safe stdlib modules as needed
     }
 
     def safe_import(self, name, globals=None, locals=None, fromlist=(), level=0):
@@ -76,7 +83,7 @@ class SafeExecutor:
     def execute(
         self,
         code: str,
-        backend_name: str = "PyFloat",
+        backend_type: type[NumericProtocol],
     ) -> dict[str, Any]:
         """Безопасно выполнить Python код в изолированном namespace.
 
@@ -85,7 +92,7 @@ class SafeExecutor:
 
         Args:
             code: Python код для выполнения
-            backend_name: Название вычислительного backend (PyFloat, NumPy, PyTorch)
+            backend_type: Класс вычислительного backend (PyFloat, NumpyFloat, DecimalNum)
 
         Returns:
             Словарь с переменными из локального namespace
@@ -115,14 +122,13 @@ class SafeExecutor:
                 "tuple": tuple,
                 "str": str,
                 "bool": bool,
-                "type": type,
             },
         }
 
         local_env: dict[str, Any] = {}
 
         # Добавить n4 модули в глобальное окружение
-        self._inject_n4_modules(safe_globals, backend_name)
+        self._inject_n4_modules(safe_globals, backend_type)
 
         exec(compiled, safe_globals, local_env)
 
@@ -131,7 +137,7 @@ class SafeExecutor:
     def _inject_n4_modules(
         self,
         safe_globals: dict[str, Any],
-        backend_name: str,
+        backend_type: type[NumericProtocol],
     ) -> None:
         """Инжектировать n4 модули и выбранный backend в namespace.
 
@@ -140,13 +146,12 @@ class SafeExecutor:
 
         Args:
             safe_globals: Глобальный namespace для выполнения
-            backend_name: Название backend для инжекции (PyFloat, NumPy и т.д.)
+            backend_type: Класс backend для инжекции
         """
         try:
             # Импортировать основные компоненты n4
             from n4.core import Value, Op
             from n4.tensor import Tensor
-            from n4.numeric import PyFloat
             from n4.nn import (
                 DenseLayer,
                 ConvLayer,
@@ -189,23 +194,25 @@ class SafeExecutor:
             safe_globals["Sub"] = Sub
             safe_globals["Pow"] = Pow
 
-            safe_globals["typing"] = typing
+            # T is the canonical backend alias; also expose under the class name
+            # so user code can write either `Model[T]` or `Model[PyFloat]`.
+            safe_globals["T"] = backend_type
+            safe_globals[backend_type.__name__] = backend_type
 
-            # Инжектировать backend (выбранный или PyFloat по умолчанию)
-            if backend_name == "PyFloat":
-                backend = PyFloat
-            else:
-                # TODO: Поддержка NumPy и других backend
-                backend = PyFloat
-
-            safe_globals["T"] = backend
-            safe_globals[backend_name] = backend
-            safe_globals["PyFloat"] = PyFloat
+            # Expose every registered backend so imports like `PyFloat` still
+            # resolve even when a different backend is active.
+            for name in self._registry.list_display_names():
+                cls = self._registry.get_class(name)
+                if cls.__name__ in _RESERVED_SANDBOX_NAMES:
+                    raise RuntimeError(
+                        f"Backend class name {cls.__name__!r} collides with a reserved sandbox name"
+                    )
+                safe_globals[cls.__name__] = cls
 
         except ImportError as e:
             raise RuntimeError(f"Failed to import n4 modules: {e}")
 
-    def extract_model(self, env: dict[str, Any]) -> Type[Model]:
+    def extract_model(self, env: dict[str, Any]) -> type[Model]:
         """Найти и вернуть класс модели из namespace выполнения.
 
         Ищет в пространстве имён класс, который является подклассом n4.nn.Model
