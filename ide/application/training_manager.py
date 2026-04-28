@@ -123,10 +123,8 @@ class TrainingManager(QObject):
             on_progress: Callback для вывода логов.
         """
         on_progress("Обучение начато...")
-        on_progress("=" * 50)
         on_progress(f"Модель: {model_class.__name__}")
         on_progress("Параметры обучения:")
         on_progress(f"  Эпохи: {config.epochs}")
         on_progress(f"  Батч: {config.batch_size}")
         on_progress(f"  Скорость обучения: {config.learning_rate}")
-        on_progress("=" * 50)
